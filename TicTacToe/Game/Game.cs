@@ -26,10 +26,7 @@ namespace TicTacToe.Game
             _Network.Initialise();
             _PlayerSymbol = _Network.GetPlayerSymbol();
 
-            while (!_ServerWon || !_ClientWon)
-            {
-                _ScreenDrawer.Draw(_GameBoard);
-            }
+
         }
 
         public void OnWaiting()

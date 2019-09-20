@@ -58,12 +58,28 @@ namespace TicTacToe.Network
 
         public void OnServerMessage(string message)
         {
-
+            Tuple<Int32, Int32> move = StringToMove(message);
+            foreach (var listener in _Listeners)
+            {
+                listener.OnMoveReceived(move.Item1, move.Item2);
+            }
         }
 
         public void OnClientMessage(string message)
         {
+            Tuple<Int32, Int32> move = StringToMove(message);
+            foreach (var listener in _Listeners)
+            {
+                listener.OnMoveReceived(move.Item1, move.Item2);
+            }
+        }
 
+        private Tuple<Int32, Int32> StringToMove(String raw)
+        {
+            String[] parts = raw.Split(',');
+            Int32 x = Int32.Parse(parts[0]);
+            Int32 y = Int32.Parse(parts[1]);
+            return new Tuple<Int32, Int32>(x, y);
         }
 
         public void AddListener(INetworkListener listener)
