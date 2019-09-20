@@ -1,27 +1,24 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using TicTacToe.Interfaces;
 
 namespace TicTacToe.Network
 {
-    public class Network
+    public class Network : IMessageListener
     {
-        private enum Mode { Undefined, Server, Client }
+        private enum Mode
+        {
+            Undefined,
+            Server,
+            Client
+        }
 
         private Mode _Mode;
 
-        private TcpListener _Server;
+        private Server _Server;
 
-        private TcpClient _Client;
-
-        private IPAddress _IpAddress;
-
-        private Int32 _Port;
-
-        public Network()
-        {
-            
-        }
+        private Client _Client;
 
         private void Configure()
         {
@@ -34,12 +31,13 @@ namespace TicTacToe.Network
                     _Mode = Mode.Undefined;
                 }
             }
+
             if (_Mode == Mode.Server)
             {
                 Console.WriteLine("Enter port of the server");
                 Int32.TryParse(Console.ReadLine(), out Int32 port);
 
-                _Server = new TcpListener(port);
+                _Server = new Server(port);
                 _Server.Start();
 
                 Console.WriteLine("Server Started...!");
@@ -51,20 +49,13 @@ namespace TicTacToe.Network
                 Console.WriteLine("Enter port...");
                 Int32.TryParse(Console.ReadLine(), out Int32 port);
 
-                _Client = new TcpClient(ip.ToString(), port);
+                _Client = new Client(ip, port);
             }
         }
 
-        private IPAddress GetLocalIpAddress()
+        public void OnMessage(string message)
         {
-            IPAddress ip = IPAddress.None;
-            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            {
-                socket.Connect("8.8.8.8", 65530);
-                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                if (endPoint != null) ip = IPAddress.Parse(endPoint.Address.ToString());
-            }
-            return ip;
+            
         }
     }
 }
