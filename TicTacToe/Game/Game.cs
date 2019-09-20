@@ -25,14 +25,12 @@ namespace TicTacToe.Game
 
             _Network.Initialise();
             _PlayerSymbol = _Network.GetPlayerSymbol();
-
-
+            _Network.StartGame();
         }
 
         public void OnWaiting()
         {
             _ScreenDrawer.Draw(_GameBoard);
-
             Console.WriteLine("Opponent is thinking...");
         }
 
@@ -57,7 +55,6 @@ namespace TicTacToe.Game
                 _GameBoard[x, y] = _PlayerSymbol;
             }
 
-            String move = Console.ReadLine();
         }
 
         public void OnMoveReceived(int x, int y)

@@ -56,6 +56,24 @@ namespace TicTacToe.Network
             return _Server != null ? 1 : 2;
         }
 
+        public void StartGame()
+        {
+            if (_Server == null)
+            {
+                foreach (var listener in _Listeners)
+                {
+                    listener.OnWaiting();
+                }
+            }
+            else
+            {
+                foreach (var listener in _Listeners)
+                {
+                    listener.OnTurnToMove();
+                }
+            }
+        }
+
         public void OnServerMessage(string message)
         {
             Tuple<Int32, Int32> move = StringToMove(message);
