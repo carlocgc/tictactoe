@@ -10,7 +10,7 @@ namespace TicTacToe.Network
     {
         private readonly List<IClientListener> _Listeners = new List<IClientListener>();
 
-        private TcpClient _Client;
+        private readonly TcpClient _Client;
 
         private readonly IPAddress _IpAddress;
 
@@ -27,13 +27,11 @@ namespace TicTacToe.Network
         {
             try
             {
-                Byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
-
-                NetworkStream stream = _Client.GetStream();
-
-                stream.Write(data, 0, data.Length);
-
-                stream.Close();
+                using (NetworkStream stream = _Client.GetStream())
+                {
+                    Byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+                    stream.Write(data, 0, data.Length);
+                }
             }
             catch (ArgumentNullException e)
             {

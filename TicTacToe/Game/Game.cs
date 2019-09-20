@@ -22,7 +22,7 @@ namespace TicTacToe.Game
             _GameBoard = new Int32[3, 3];
             _ScreenDrawer = new Drawer();
             _Network = new Network.Network();
-
+            _Network.AddListener(this);
             _Network.Initialise();
             _PlayerSymbol = _Network.GetPlayerSymbol();
             _Network.StartGame();

@@ -45,17 +45,11 @@ namespace TicTacToe.Network
 
                 while (true)
                 {
-                    foreach (var listener in _Listeners)
-                    {
-                        listener.OnServerMessage("Waiting for connection...");
-                    }
+                    Console.WriteLine("Waiting for opponent to connect...");
 
                     using (TcpClient client = _Server.AcceptTcpClient())
                     {
-                        foreach (var listener in _Listeners)
-                        {
-                            listener.OnServerMessage("Connected!");
-                        }
+                        Console.WriteLine("Opponent connected!");
 
                         using (NetworkStream stream = client.GetStream())
                         {

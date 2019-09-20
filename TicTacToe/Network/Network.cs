@@ -36,6 +36,7 @@ namespace TicTacToe.Network
                 Int32.TryParse(Console.ReadLine(), out Int32 port);
 
                 _Server = new Server(port);
+                _Server.AddListener(this);
                 _Server.Start();
 
                 Console.WriteLine("Server Started...!");
@@ -48,6 +49,7 @@ namespace TicTacToe.Network
                 Int32.TryParse(Console.ReadLine(), out Int32 port);
 
                 _Client = new Client(ip, port);
+                _Client.AddListener(this);
             }
         }
 
