@@ -76,6 +76,23 @@ namespace TicTacToe.Network
             }
         }
 
+        public void SendMove(Int32 x, Int32 y)
+        {
+            if (_Server == null)
+            {
+                _Client.SendMessage($"{x},{y}");
+            }
+            else
+            {
+                _Server.SendMessage($"{x},{y}");
+            }
+
+            foreach (var listener in _Listeners)
+            {
+                listener.OnWaiting();
+            }
+        }
+
         public void OnServerMessage(string message)
         {
             Tuple<Int32, Int32> move = StringToMove(message);

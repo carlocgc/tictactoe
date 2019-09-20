@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.SqlServer.Server;
 using TicTacToe.Interfaces;
 
 namespace TicTacToe.Game
@@ -17,6 +18,8 @@ namespace TicTacToe.Game
 
         private Int32 _PlayerSymbol;
 
+        private Boolean _Waiting;
+
         public void Run()
         {
             _GameBoard = new Int32[3, 3];
@@ -30,8 +33,15 @@ namespace TicTacToe.Game
 
         public void OnWaiting()
         {
+            _Waiting = true;
             _ScreenDrawer.Draw(_GameBoard);
             Console.WriteLine("Opponent is thinking...");
+
+            while (_Waiting)
+            {
+            }
+
+            OnTurnToMove();
         }
 
         public void OnTurnToMove()
@@ -53,13 +63,15 @@ namespace TicTacToe.Game
 
                 inputValid = true;
                 _GameBoard[x, y] = _PlayerSymbol;
+                _Network.SendMove(x, y);
             }
-
         }
 
         public void OnMoveReceived(int x, int y)
         {
             _GameBoard[x, y] = _PlayerSymbol == 1 ? 2 : 1;
+            _Waiting = false;
+            CheckIfGameComplete();
         }
 
         private void CheckIfGameComplete()
