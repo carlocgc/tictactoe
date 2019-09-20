@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using TicTacToe.Interfaces;
 
 namespace TicTacToe.Network
 {
-    public class Network : IMessageListener
+    public class Network : INotifier<INetworkListener>, IServerListener, IClientListener
     {
-        private enum Mode
-        {
-            Undefined,
-            Server,
-            Client
-        }
+        private enum Mode { Undefined, Server, Client }
+
+        private readonly List<INetworkListener> _Listeners = new List<INetworkListener>();
 
         private Mode _Mode;
 
@@ -20,7 +18,7 @@ namespace TicTacToe.Network
 
         private Client _Client;
 
-        private void Configure()
+        public void Initialise()
         {
             while (_Mode == Mode.Undefined)
             {
@@ -53,9 +51,30 @@ namespace TicTacToe.Network
             }
         }
 
-        public void OnMessage(string message)
+        public Int32 GetPlayerSymbol()
         {
-            
+            return _Server != null ? 1 : 2;
         }
+
+        public void OnServerMessage(string message)
+        {
+
+        }
+
+        public void OnClientMessage(string message)
+        {
+
+        }
+
+        public void AddListener(INetworkListener listener)
+        {
+            if (!_Listeners.Contains(listener)) _Listeners.Add(listener);
+        }
+
+        public void RemoveListener(INetworkListener listener)
+        {
+            if (_Listeners.Contains(listener)) _Listeners.Remove(listener);
+        }
+
     }
 }

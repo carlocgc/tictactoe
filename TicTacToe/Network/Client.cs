@@ -6,9 +6,9 @@ using TicTacToe.Interfaces;
 
 namespace TicTacToe.Network
 {
-    public class Client : INotifier<IMessageListener>
+    public class Client : INotifier<IClientListener>
     {
-        private readonly List<IMessageListener> _Listeners = new List<IMessageListener>();
+        private readonly List<IClientListener> _Listeners = new List<IClientListener>();
 
         private TcpClient _Client;
 
@@ -20,33 +20,20 @@ namespace TicTacToe.Network
         {
             _IpAddress = serverIp;
             _Port = port;
+            _Client = new TcpClient(_IpAddress.ToString(), _Port);
         }
 
         public void SendMessage(String message)
         {
             try
             {
-
-                _Client = new TcpClient(_IpAddress.ToString(), _Port);
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
 
                 NetworkStream stream = _Client.GetStream();
 
                 stream.Write(data, 0, data.Length);
 
-                String response = String.Empty;
-
-                Int32 bytes = stream.Read(data, 0, data.Length);
-                response = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-
-                foreach (var listener in _Listeners)
-                {
-                    listener.OnMessage(response);
-                }
-
                 stream.Close();
-                _Client.Close();
-
             }
             catch (ArgumentNullException e)
             {
@@ -60,12 +47,45 @@ namespace TicTacToe.Network
             }
         }
 
-        public void AddListener(IMessageListener listener)
+        public void ReceiveMessage()
+        {
+            try
+            {
+                using (NetworkStream stream = _Client.GetStream())
+                {
+                    Byte[] data = new Byte[1024];
+                    Int32 bytes = stream.Read(data, 0, data.Length);
+                    var response = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+
+                    foreach (var listener in _Listeners)
+                    {
+                        listener.OnClientMessage(response);
+                    }
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        public void Disconnect()
+        {
+            _Client.Close();
+        }
+
+        public void AddListener(IClientListener listener)
         {
             if (!_Listeners.Contains(listener)) _Listeners.Add(listener);
         }
 
-        public void RemoveListener(IMessageListener listener)
+        public void RemoveListener(IClientListener listener)
         {
             if (_Listeners.Contains(listener)) _Listeners.Remove(listener);
         }

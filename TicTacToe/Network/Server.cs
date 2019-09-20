@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using TicTacToe.Interfaces;
 
 namespace TicTacToe.Network
 {
-    public class Server : INotifier<IMessageListener>
+    public class Server : INotifier<IServerListener>
     {
-        private readonly List<IMessageListener> _Listeners = new List<IMessageListener>();
+        private readonly List<IServerListener> _Listeners = new List<IServerListener>();
 
         private readonly TcpListener _Server;
+
+        private Boolean _MessageToSend;
+
+        private String _Message;
 
         public Server(Int32 port)
         {
@@ -37,46 +42,41 @@ namespace TicTacToe.Network
                 _Server.Start();
 
                 Byte[] bytes = new Byte[256];
-                String data = null;
 
                 while (true)
                 {
                     foreach (var listener in _Listeners)
                     {
-                        listener.OnMessage("Waiting for connection...");
+                        listener.OnServerMessage("Waiting for connection...");
                     }
 
                     using (TcpClient client = _Server.AcceptTcpClient())
                     {
                         foreach (var listener in _Listeners)
                         {
-                            listener.OnMessage("Connected!");
+                            listener.OnServerMessage("Connected!");
                         }
 
                         using (NetworkStream stream = client.GetStream())
                         {
-                            data = null;
                             Int32 i;
 
                             while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                             {
-                                data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                                var data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
                                 foreach (var connectionListener in _Listeners)
                                 {
-                                    connectionListener.OnMessage(data);
+                                    connectionListener.OnServerMessage(data);
                                 }
+                            }
 
-                                data = data.ToUpper();
-
-                                Byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-
+                            while (_MessageToSend)
+                            {
+                                Byte[] msg = System.Text.Encoding.ASCII.GetBytes(_Message);
                                 stream.Write(msg, 0, msg.Length);
-
-                                foreach (var listener in _Listeners)
-                                {
-                                    listener.OnMessage($"Sent: {data}");
-                                }
+                                _Message = String.Empty;
+                                _MessageToSend = false;
                             }
                         }
                     }
@@ -93,12 +93,18 @@ namespace TicTacToe.Network
             }
         }
 
-        public void AddListener(IMessageListener listener)
+        public void SendMessage(String message)
+        {
+            _Message = message;
+            _MessageToSend = true;
+        }
+
+        public void AddListener(IServerListener listener)
         {
             if (!_Listeners.Contains(listener)) _Listeners.Add(listener);
         }
 
-        public void RemoveListener(IMessageListener listener)
+        public void RemoveListener(IServerListener listener)
         {
             if (_Listeners.Contains(listener)) _Listeners.Remove(listener);
         }
