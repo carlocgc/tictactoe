@@ -43,12 +43,14 @@ namespace TicTacToe.Network
             }
             else
             {
-                Console.WriteLine("Enter server address...");
-                IPAddress.TryParse(Console.ReadLine() ?? "", out IPAddress ip);
-                Console.WriteLine("Enter port...");
-                Int32.TryParse(Console.ReadLine(), out Int32 port);
-
-                _Client = new Client(ip, port);
+                // TODO Remove hard coded ip and port
+                //Console.WriteLine("Enter server address...");
+                //IPAddress.TryParse(Console.ReadLine() ?? "", out IPAddress ip);
+                //Console.WriteLine("Enter port...");
+                //Int32.TryParse(Console.ReadLine(), out Int32 port);
+                //_Client = new Client(ip, port);
+                Console.WriteLine("Connecting to \"192.168.0.10:6633\"");
+                _Client = new Client(IPAddress.Parse("192.168.0.10"), 6633);
                 _Client.AddListener(this);
             }
         }
