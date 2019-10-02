@@ -16,6 +16,8 @@ namespace TicTacToe.Game
             DetermineHost();
 
             SetUpConnection();
+
+            Console.ReadKey();
         }
 
         private void DetermineHost()
