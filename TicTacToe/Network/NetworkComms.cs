@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 
 namespace TicTacToe.Network
 {
     public class NetworkComms
     {
-        private readonly IPAddress _ServerAddress;
+        private readonly IPAddress _LocalAddress;
 
-        private readonly Int32 _Port;
+        private readonly Int32 _LocalPort;
 
         private readonly TcpListener _ServerListener;
 
@@ -22,9 +20,9 @@ namespace TicTacToe.Network
 
         public NetworkComms()
         {
-            _ServerAddress = IPAddress.Any;
-            _Port = 6600;
-            _ServerListener = new TcpListener(_ServerAddress, _Port);
+            _LocalAddress = IPAddress.Any;
+            _LocalPort = 6600;
+            _ServerListener = new TcpListener(_LocalAddress, _LocalPort);
             _Connected = false;
         }
 
@@ -33,8 +31,10 @@ namespace TicTacToe.Network
         /// </summary>
         public void WaitForClient()
         {
-            Console.WriteLine($"Listening at {_ServerAddress} on port {_Port}.");
+            Console.WriteLine($"Listening at {_LocalAddress} on port {_LocalPort}.");
             Console.WriteLine($"Waiting for opponent...");
+
+            _ServerListener.Start();
 
             while (!_Connected)
             {
@@ -45,7 +45,6 @@ namespace TicTacToe.Network
                 if (!_Client.Connected) continue;
 
                 _Connected = true;
-                
                 Console.WriteLine($"{_Client.Client.RemoteEndPoint} connected...");
             }
 
