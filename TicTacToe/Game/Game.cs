@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using TicTacToe.Data;
 using TicTacToe.Network;
 
 namespace TicTacToe.Game
@@ -17,7 +18,27 @@ namespace TicTacToe.Game
 
             SetUpConnection();
 
+            SendTestMessages();
+
             Console.ReadKey();
+        }
+
+        private void SendTestMessages()
+        {
+            Boolean running = true;
+
+            while (running)
+            {
+                Console.WriteLine($"Enter a test message");
+
+                String message = Console.ReadLine();
+
+                _Network.SendMessage("message", message);
+                Console.WriteLine($"SENT : {message}");
+
+                String resp = _Network.ReceiveMessages();
+                Console.WriteLine($"RESPONSE : {resp}");
+            }
         }
 
         private void DetermineHost()
@@ -76,7 +97,7 @@ namespace TicTacToe.Game
                     Console.WriteLine($"Enter host port...");
                     portValid = Int32.TryParse(Console.ReadLine() ?? "", out port);
                 }
-                
+
                 _Network.ConnectToHost(ip, port);
             }
         }

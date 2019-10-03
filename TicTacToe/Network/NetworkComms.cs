@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+using TicTacToe.Data;
 
 namespace TicTacToe.Network
 {
@@ -82,9 +85,37 @@ namespace TicTacToe.Network
             return false;
         }
 
-        public void SendMove(String command, String message)
+        public void SendMessage(String command, String message)
         {
-            // TODO send a message and await 
+            
+        }
+
+        public String ReceiveMessages()
+        {
+            Boolean waiting = true;
+            String message = String.Empty;
+
+            while (waiting)
+            {
+                if (_Client.Available <= 0) continue;
+
+                // We have a message
+                Byte[] sizeBuffer = new Byte[2];
+                _MsgStream.Read(sizeBuffer, 0, sizeBuffer.Length);
+
+                Byte[] jsonBuffer = new Byte[sizeBuffer.Length];
+                _MsgStream.Read(jsonBuffer, 0, jsonBuffer.Length);
+
+                String jsonString = Encoding.UTF8.GetString(jsonBuffer);
+                Packet packet = Packet.FromJson(jsonString);
+
+                // TODO Handle different commands
+
+                // For now just return the message
+                message = packet.Message;
+            }
+
+            return message;
         }
     }
 }
