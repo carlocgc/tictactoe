@@ -112,8 +112,9 @@ namespace TicTacToe.Network
                 // We have a message
                 Byte[] sizeBuffer = new Byte[2];
                 _MsgStream.Read(sizeBuffer, 0, sizeBuffer.Length);
+                Int16 messageSize = Convert.ToInt16(sizeBuffer);
 
-                Byte[] jsonBuffer = new Byte[sizeBuffer.Length];
+                Byte[] jsonBuffer = new Byte[messageSize];
                 _MsgStream.Read(jsonBuffer, 0, jsonBuffer.Length);
 
                 String jsonString = Encoding.UTF8.GetString(jsonBuffer);
