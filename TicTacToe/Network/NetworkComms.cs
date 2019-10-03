@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -87,7 +88,16 @@ namespace TicTacToe.Network
 
         public void SendMessage(String command, String message)
         {
-            
+            Byte[] messageBuffer = Encoding.UTF8.GetBytes(message);
+            Byte[] sizeBuffer = new Byte[2];
+            Int16 size = (Int16)messageBuffer.Length;
+            sizeBuffer = BitConverter.GetBytes(size);
+
+            Byte[] packetBuffer = new Byte[sizeBuffer.Length + messageBuffer.Length];
+            sizeBuffer.CopyTo(packetBuffer, 0);
+            messageBuffer.CopyTo(packetBuffer, sizeBuffer.Length);
+
+            _MsgStream.Write(packetBuffer, 0, packetBuffer.Length);
         }
 
         public String ReceiveMessages()
