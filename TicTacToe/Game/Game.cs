@@ -12,6 +12,8 @@ namespace TicTacToe.Game
 
         public Boolean _IsHost;
 
+        private Boolean _WaitingMessage;
+
         public void Run()
         {
             DetermineHost();
@@ -25,19 +27,28 @@ namespace TicTacToe.Game
 
         private void SendTestMessages()
         {
+            _WaitingMessage = !_IsHost;
             Boolean running = true;
 
             while (running)
             {
-                Console.WriteLine($"Enter a test message");
+                if (!_WaitingMessage)
+                {
+                    String message = Console.ReadLine();
+                    Console.WriteLine($"Enter a test message");
+                    
+                    _Network.SendMessage("message", message);
+                    Console.WriteLine($"SENT : {message}");
+                }
+                else
+                {
+                    Console.WriteLine($"Waiting for a test message");
 
-                String message = Console.ReadLine();
+                    String resp = _Network.ReceiveMessages();
+                    Console.WriteLine($"RESPONSE : {resp}");
+                }
 
-                _Network.SendMessage("message", message);
-                Console.WriteLine($"SENT : {message}");
-
-                String resp = _Network.ReceiveMessages();
-                Console.WriteLine($"RESPONSE : {resp}");
+                _WaitingMessage = !_WaitingMessage;
             }
         }
 
