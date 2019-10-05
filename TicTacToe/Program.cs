@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TicTacToe
+﻿namespace TicTacToe
 {
     class Program
     {
@@ -14,6 +7,5 @@ namespace TicTacToe
             Game.Game game = new Game.Game();
             game.Run();
         }
-
     }
 }

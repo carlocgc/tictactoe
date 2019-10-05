@@ -1,33 +1,59 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using TicTacToe.Data;
 
 namespace TicTacToe.Network
 {
-    public class NetworkComms
+    /// <summary> Manages the connection between two players, can send and receive message packets </summary>
+    public class MessageService
     {
+        /// <summary> The local ip address </summary>
         private readonly IPAddress _LocalAddress;
-
+        /// <summary> The message port </summary>
         private readonly Int32 _LocalPort;
-
+        /// <summary> Waits for a client and connected them </summary>
         private readonly TcpListener _ServerListener;
-
+        /// <summary> Connected client </summary>
         private TcpClient _Client;
-
+        /// <summary> The clients message stream </summary>
         private NetworkStream _MsgStream;
-
+        /// <summary> Whether the message service is connected to the client </summary>
         private Boolean _Connected;
 
-        public NetworkComms()
+        public MessageService()
         {
-            _LocalAddress = IPAddress.Any;
+            try
+            {
+                _LocalAddress = GetLocalIpAddress();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Network error: " + e.Message);
+                Console.WriteLine("Game exiting...");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }
             _LocalPort = 6600;
             _ServerListener = new TcpListener(_LocalAddress, _LocalPort);
             _Connected = false;
+        }
+
+        /// <summary> Gets the environment IPv4 address </summary>
+        /// <returns></returns>
+        private IPAddress GetLocalIpAddress()
+        {
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (IPAddress ipAddress in host.AddressList)
+            {
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ipAddress;
+                }
+            }
+            throw new Exception("No IPv4 device detected for this environment.");
         }
 
         /// <summary>
@@ -86,47 +112,55 @@ namespace TicTacToe.Network
             return false;
         }
 
-        public void SendMessage(String command, String message)
+        /// <summary>
+        /// Send a message packet
+        /// </summary>
+        /// <param name="packet"></param>
+        public void SendPacket(Packet packet)
         {
-            Byte[] messageBuffer = Encoding.UTF8.GetBytes(message);
-            Byte[] sizeBuffer = new Byte[2];
+            Byte[] messageBuffer = Encoding.UTF8.GetBytes(packet.ToString());
+
+            // Int16 is 2 bytes big, all messages will be prefixed with message size so we know how much data to read from the stream
+            // This is in case we have more than one waiting message
             Int16 size = (Int16)messageBuffer.Length;
-            sizeBuffer = BitConverter.GetBytes(size);
+            Byte[] sizeBuffer = BitConverter.GetBytes(size);
 
             Byte[] packetBuffer = new Byte[sizeBuffer.Length + messageBuffer.Length];
+
             sizeBuffer.CopyTo(packetBuffer, 0);
             messageBuffer.CopyTo(packetBuffer, sizeBuffer.Length);
 
             _MsgStream.Write(packetBuffer, 0, packetBuffer.Length);
         }
 
-        public String ReceiveMessages()
+        /// <summary>
+        /// Waits until a packet is received and returns it
+        /// </summary>
+        /// <returns></returns>
+        public Packet AwaitPacket()
         {
             Boolean waiting = true;
-            String message = String.Empty;
+            Packet packet = new Packet();
 
             while (waiting)
             {
                 if (_Client.Available <= 0) continue;
 
-                // We have a message
+                // We have a message, get the size of the message from the first 2 bytes
                 Byte[] sizeBuffer = new Byte[2];
                 _MsgStream.Read(sizeBuffer, 0, sizeBuffer.Length);
-                Int16 messageSize = Convert.ToInt16(sizeBuffer);
+                Int16 messageSize = BitConverter.ToInt16(sizeBuffer, 0);
 
+                // Get that much data from the stream, that must be the message
                 Byte[] jsonBuffer = new Byte[messageSize];
                 _MsgStream.Read(jsonBuffer, 0, jsonBuffer.Length);
 
                 String jsonString = Encoding.UTF8.GetString(jsonBuffer);
-                Packet packet = Packet.FromJson(jsonString);
-
-                // TODO Handle different commands
-
-                // For now just return the message
-                message = packet.Message;
+                packet = Packet.FromJson(jsonString);
+                waiting = false;
             }
 
-            return message;
+            return packet;
         }
     }
 }

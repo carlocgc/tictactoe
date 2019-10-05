@@ -46,8 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\GameData.cs" />
     <Compile Include="Game\Game.cs" />
-    <Compile Include="Network\NetworkComms.cs" />
+    <Compile Include="Network\MessageService.cs" />
     <Compile Include="Data\Packet.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

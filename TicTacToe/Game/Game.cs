@@ -1,57 +1,106 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using TicTacToe.Data;
 using TicTacToe.Network;
+using static TicTacToe.Data.GameData;
 
 namespace TicTacToe.Game
 {
     public class Game
     {
-        private NetworkComms _Network;
+        /// <summary> Message handler functions  </summary>
+        private readonly Dictionary<Command, Func<String, Boolean>> _MessageHandlers = new Dictionary<Command, Func<String, Boolean>>();
+        /// <summary> Sends and receives messages as packets </summary>
+        private MessageService _MessageService;
+        /// <summary> Whether or not this player is the game host </summary>
+        private Boolean _IsHost;
+        /// <summary> Whether the game is running </summary>
+        private Boolean _Running = false;
+        /// <summary> Whether its the players turn </summary>
+        private Boolean _Moving;
 
-        public Boolean _IsHost;
+        /// <summary> Sets up the message handlers, called once at game start </summary>
+        private void Initialise()
+        {
+            _MessageHandlers.Add(Command.MESSAGE, HandleMessage);
+        }
 
-        private Boolean _WaitingMessage;
-
+        /// <summary> Main game loop </summary>
         public void Run()
         {
+            Initialise();
+
             DetermineHost();
 
             SetUpConnection();
 
-            SendTestMessages();
+            if (_IsHost)
+            {
+                _Moving = true;
+            }
+
+            _Running = true;
+
+            while (_Running)
+            {
+                if (_IsHost)
+                {
+                    if (_Moving)
+                    {
+                        // Get input
+
+                        // Check for win
+
+                        // Send game state
+
+                        _Moving = false;
+                    }
+                    else
+                    {
+                        // await move request
+
+                        // validate move and reply
+
+                        // update board
+
+                        // check for win
+                        
+                        // send game state
+
+                        _Moving = true;
+                    }
+                }
+                else
+                {
+                    if (_Moving)
+                    {
+                        // get input
+
+                        // validate move
+
+                        // send input to host
+
+                        // await reply
+
+                        // handle reply
+
+                        _Moving = false;
+                    }
+                    else
+                    {
+                        // await host move
+
+                        _Moving = true;
+                    }
+                }
+            }
 
             Console.ReadKey();
         }
 
-        private void SendTestMessages()
-        {
-            _WaitingMessage = !_IsHost;
-            Boolean running = true;
-
-            while (running)
-            {
-                if (!_WaitingMessage)
-                {
-                    String message = Console.ReadLine();
-                    Console.WriteLine($"Enter a test message");
-                    
-                    _Network.SendMessage("message", message);
-                    Console.WriteLine($"SENT : {message}");
-                }
-                else
-                {
-                    Console.WriteLine($"Waiting for a test message");
-
-                    String resp = _Network.ReceiveMessages();
-                    Console.WriteLine($"RESPONSE : {resp}");
-                }
-
-                _WaitingMessage = !_WaitingMessage;
-            }
-        }
-
+        /// <summary>
+        /// Asks the player if they are a host or a client and configures the network accordingly
+        /// </summary>
         private void DetermineHost()
         {
             Boolean valid = false;
@@ -81,13 +130,16 @@ namespace TicTacToe.Game
             }
         }
 
+        /// <summary>
+        /// Configures the network connection between two players
+        /// </summary>
         private void SetUpConnection()
         {
-            _Network = new NetworkComms();
+            _MessageService = new MessageService();
 
             if (_IsHost)
             {
-                _Network.WaitForClient();
+                _MessageService.WaitForClient();
             }
             else
             {
@@ -109,8 +161,32 @@ namespace TicTacToe.Game
                     portValid = Int32.TryParse(Console.ReadLine() ?? "", out port);
                 }
 
-                _Network.ConnectToHost(ip, port);
+                _MessageService.ConnectToHost(ip, port);
             }
+        }
+        private Boolean HandleMessage(String message)
+        {
+            return false;
+        }
+
+        private void HandleMoveRequest(String move)
+        {
+
+        }
+
+        private void HandleMoveConfirm(String message)
+        {
+
+        }
+
+        private void HandleInputDeny(String message)
+        {
+
+        }
+
+        private void HandleBoardState(String state)
+        {
+
         }
     }
 }
