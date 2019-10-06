@@ -392,8 +392,7 @@ namespace TicTacToe.Game
                 }
             }
 
-            DrawGameBoard();
-            Console.WriteLine($"Game board updated!");
+            _WaitingMoveConfirmationFromHost = false;
         }
 
         private void HandleGameWon(String message)
@@ -410,6 +409,8 @@ namespace TicTacToe.Game
                 DrawGameBoard();
                 Console.WriteLine($"Congratulations, you won!");
             }
+
+            _WaitingMoveConfirmationFromHost = false;
         }
 
         private void DrawGameBoard()
