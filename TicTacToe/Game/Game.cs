@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
+using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
 
@@ -168,6 +170,90 @@ namespace TicTacToe.Game
                 _MessageService.ConnectToHost(ip, port);
             }
         }
+
+        /// <summary>
+        /// Prompts for a valid move on the game board 
+        /// </summary>
+        /// <returns></returns>
+        private Move GetMove()
+        {
+            Boolean valid = false;
+
+            Int32 x = 0;
+            Int32 y = 0;
+
+            String lastError = String.Empty;
+
+            while (!valid)
+            {
+                DrawGameBoard();
+                Console.WriteLine();
+                Console.WriteLine($"Enter a valid move in format \"X,X\" (1-3)");
+                if (lastError != String.Empty)
+                {
+                    Console.WriteLine($"{lastError}");
+                }
+
+                String input = Console.ReadLine() ?? "";
+
+                if (input.Length > 3)
+                {
+                    Console.WriteLine($"Too many characters, try again...");
+                    continue;
+                }
+
+                if (input.Length < 3)
+                {
+                    Console.WriteLine($"Too few characters, try again...");
+                    continue;
+                }
+
+                if (!input.Contains(","))
+                {
+                    Console.WriteLine($"Missing comma, try again...");
+                    continue;
+                }
+
+                String[] parts = input.Split(',');
+
+                if (!Int32.TryParse(parts[0], out Int32 tempX))
+                {
+                    Console.WriteLine($"{parts[0]} is not a number, try again...");
+                    continue;
+                }
+
+                if (tempX <= 0 || tempX >= 4)
+                {
+                    Console.WriteLine($"{tempX} is out of bounds, must be between 1-3, try again...");
+                    continue;
+                }
+
+                if (!Int32.TryParse(parts[1], out Int32 tempY))
+                {
+                    Console.WriteLine($"{parts[0]} is not a number, try again...");
+                    continue;
+                }
+
+                if (tempY <= 0 || tempY >= 4)
+                {
+                    Console.WriteLine($"{tempY} is out of bounds, must be between 1-3, try again...");
+                    continue;
+                }
+
+                if (_GameBoard[tempX, tempY] != '-')
+                {
+                    Console.WriteLine($"({tempX}, {tempY}) is already taken by \"{_GameBoard[tempX, tempY]}\", try again...");
+                    continue;
+                }
+
+                x = tempX;
+                y = tempY;
+                valid = true;
+            }
+            return  new Move(x, y);
+        }
+
+
         private Boolean HandleMessage(String message)
         {
             return false;
