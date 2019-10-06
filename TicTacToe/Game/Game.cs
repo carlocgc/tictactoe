@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Xml;
 using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
@@ -257,25 +258,25 @@ namespace TicTacToe.Game
 
                 if (!Int32.TryParse(parts[0], out Int32 tempX))
                 {
-                    Console.WriteLine($"{parts[0]} is not a number, try again...");
+                    Console.WriteLine($"{tempX} is not a number, try again...");
                     continue;
                 }
 
                 if (tempX < 0 || tempX > 2)
                 {
-                    Console.WriteLine($"{tempX} is out of bounds, must be between 1-3, try again...");
+                    Console.WriteLine($"{tempX} is out of bounds, must be between 0-2, try again...");
                     continue;
                 }
 
                 if (!Int32.TryParse(parts[1], out Int32 tempY))
                 {
-                    Console.WriteLine($"{parts[0]} is not a number, try again...");
+                    Console.WriteLine($"{tempY} is not a number, try again...");
                     continue;
                 }
 
-                if (tempY <= 0 || tempY >= 4)
+                if (tempY < 0 || tempY > 2)
                 {
-                    Console.WriteLine($"{tempY} is out of bounds, must be between 1-3, try again...");
+                    Console.WriteLine($"{tempY} is out of bounds, must be between 0-2, try again...");
                     continue;
                 }
 
