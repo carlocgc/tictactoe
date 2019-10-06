@@ -307,9 +307,9 @@ namespace TicTacToe.Game
 
         private Packet GameBoardAsPacket()
         {
-            String gameBoardString = $"{_GameBoard[0, 0]}:{_GameBoard[1, 0]}:{_GameBoard[2, 0]}:" +
-                                     $"{_GameBoard[1, 0]}:{_GameBoard[1, 1]}:{_GameBoard[2, 1]}:" +
-                                     $"{_GameBoard[2, 0]}:{_GameBoard[1, 2]}:{_GameBoard[2, 2]}";
+            String gameBoardString = $"{_GameBoard[0, 0]}:{_GameBoard[0, 1]}:{_GameBoard[0, 2]}:" +
+                                     $"{_GameBoard[1, 0]}:{_GameBoard[1, 1]}:{_GameBoard[1, 2]}:" +
+                                     $"{_GameBoard[2, 0]}:{_GameBoard[2, 1]}:{_GameBoard[2, 2]}";
 
             return new Packet(Command.BOARD_STATE.ToString(), gameBoardString);
         }
