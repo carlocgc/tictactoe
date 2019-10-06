@@ -179,25 +179,30 @@ namespace TicTacToe.Game
             }
             else
             {
-                IPAddress ip = IPAddress.None;
-                Int32 port = 0;
-                Boolean addressValid = false;
+                //IPAddress ip = IPAddress.None;
+                //Int32 port = 0;
+                //Boolean addressValid = false;
 
-                while (!addressValid)
-                {
-                    Console.WriteLine($"Enter host ip address...");
-                    addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
-                }
+                //while (!addressValid)
+                //{
+                //    Console.WriteLine($"Enter host ip address...");
+                //    addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
+                //}
 
-                Boolean portValid = false;
+                //Boolean portValid = false;
 
-                while (!portValid)
-                {
-                    Console.WriteLine($"Enter host port...");
-                    portValid = Int32.TryParse(Console.ReadLine() ?? "", out port);
-                }
+                //while (!portValid)
+                //{
+                //    Console.WriteLine($"Enter host port...");
+                //    portValid = Int32.TryParse(Console.ReadLine() ?? "", out port);
+                //}
 
-                _MessageService.ConnectToHost(ip, port);
+                //_MessageService.ConnectToHost(ip, port);
+
+                // TODO Remove this test code
+
+                IPAddress ip = IPAddress.Parse("192.168.0.10");
+                _MessageService.ConnectToHost(ip, 6600);
             }
         }
 
