@@ -118,17 +118,17 @@ namespace TicTacToe.Network
         /// <param name="packet"></param>
         public void SendPacket(Packet packet)
         {
-            Byte[] messageBuffer = Encoding.UTF8.GetBytes(packet.ToString());
+            Byte[] jsonBuffer = Encoding.UTF8.GetBytes(packet.ToJson());
 
             // Int16 is 2 bytes big, all messages will be prefixed with message size so we know how much data to read from the stream
             // This is in case we have more than one waiting message
-            Int16 size = (Int16)messageBuffer.Length;
+            Int16 size = (Int16)jsonBuffer.Length;
             Byte[] sizeBuffer = BitConverter.GetBytes(size);
 
-            Byte[] packetBuffer = new Byte[sizeBuffer.Length + messageBuffer.Length];
+            Byte[] packetBuffer = new Byte[sizeBuffer.Length + jsonBuffer.Length];
 
             sizeBuffer.CopyTo(packetBuffer, 0);
-            messageBuffer.CopyTo(packetBuffer, sizeBuffer.Length);
+            jsonBuffer.CopyTo(packetBuffer, sizeBuffer.Length);
 
             _MsgStream.Write(packetBuffer, 0, packetBuffer.Length);
         }
