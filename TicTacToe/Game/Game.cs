@@ -226,7 +226,6 @@ namespace TicTacToe.Game
 
             while (!valid)
             {
-                DrawGameBoard();
                 Console.WriteLine();
                 Console.WriteLine($"Enter a valid move in format \"X,X\" (0-2)");
                 if (lastError != String.Empty)
@@ -262,7 +261,7 @@ namespace TicTacToe.Game
                     continue;
                 }
 
-                if (tempX <= 0 || tempX >= 4)
+                if (tempX < 0 || tempX > 2)
                 {
                     Console.WriteLine($"{tempX} is out of bounds, must be between 1-3, try again...");
                     continue;
