@@ -47,7 +47,7 @@ namespace TicTacToe.Game
 
             if (_IsHost)
             {
-                _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), ));
+                _MessageService.SendPacket(GameBoardAsPacket());
 
                 Packet packet = _MessageService.AwaitPacket();
 
@@ -57,7 +57,7 @@ namespace TicTacToe.Game
             {
                 Packet packet = _MessageService.AwaitPacket();
 
-                _GameBoard = JsonConvert.DeserializeObject<Char[,]>(packet.Message);
+                HandlePacket(packet);
 
                 Console.ReadKey();
             }
