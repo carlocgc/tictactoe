@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using Newtonsoft.Json;
 using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
@@ -22,6 +23,8 @@ namespace TicTacToe.Game
         private Boolean _Moving;
         /// <summary> The game board data </summary>
         private Char[,] _GameBoard = { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
+        /// <summary> The character that represents the player on the game board X or O </summary>
+        private Char _PlayerChar;
 
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
@@ -32,13 +35,13 @@ namespace TicTacToe.Game
         /// <summary> Main game loop </summary>
         public void Run()
         {
-            DrawGameBoard();
-
             Initialise();
 
             DetermineHost();
 
             SetUpConnection();
+
+            _PlayerChar = _IsHost ? 'X' : 'O';
 
             if (_IsHost)
             {
@@ -53,11 +56,16 @@ namespace TicTacToe.Game
                 {
                     if (_Moving)
                     {
-                        // Get input
+                        Move move = GetMove();
 
-                        // Check for win
+                        _GameBoard[move.X, move.Y] = _PlayerChar;
 
-                        // Send game state
+                        if (GameWon())
+                        {
+                            // TODO handle game won
+                        }
+
+                        _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), JsonConvert.SerializeObject(_GameBoard)));
 
                         _Moving = false;
                     }
@@ -250,9 +258,18 @@ namespace TicTacToe.Game
                 y = tempY;
                 valid = true;
             }
-            return  new Move(x, y);
+            return new Move(x, y);
         }
 
+        private Boolean GameWon()
+        {
+            if (_GameBoard[0, 0] == _PlayerChar && _GameBoard[0, 1] == _PlayerChar && _GameBoard[0, 2] == _PlayerChar) return true;
+            if (_GameBoard[1, 0] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[1, 2] == _PlayerChar) return true;
+            if (_GameBoard[2, 0] == _PlayerChar && _GameBoard[2, 1] == _PlayerChar && _GameBoard[2, 2] == _PlayerChar) return true;
+            if (_GameBoard[0, 0] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[2, 2] == _PlayerChar) return true;
+            if (_GameBoard[0, 2] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[2, 0] == _PlayerChar) return true;
+            return false;
+        }
 
         private Boolean HandleMessage(String message)
         {
