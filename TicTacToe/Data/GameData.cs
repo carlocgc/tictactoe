@@ -11,10 +11,12 @@ namespace TicTacToe.Data
         public enum Command
         {
             MESSAGE,
+            PACKET_RECEIVED,
             MOVE_REQUEST,
             MOVE_CONFIRM,
             MOVE_DENY,
             BOARD_STATE,
+            GAME_WON,
             EXIT,
         }
     }

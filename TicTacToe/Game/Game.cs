@@ -10,6 +10,8 @@ namespace TicTacToe.Game
 {
     public class Game
     {
+        private const Char HOST_CHAR = 'X';
+        private const Char CLIENT_CHAR = 'O';
         /// <summary> Message handler functions  </summary>
         private readonly Dictionary<Command, Action<String>> _MessageHandlers = new Dictionary<Command, Action<String>>();
         /// <summary> Sends and receives messages as packets </summary>
@@ -22,8 +24,10 @@ namespace TicTacToe.Game
         private Boolean _Moving;
         /// <summary> The game board data </summary>
         private Char[,] _GameBoard = { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
-        /// <summary> The character that represents the player on the game board X or O </summary>
-        private Char _PlayerChar;
+        /// <summary> Whether host game is waiting for a valid move from the client </summary>
+        private Boolean _WaitingValidMoveFromClient = false;
+        /// <summary> Whether client game is waiting for the host to validate the clients move request </summary>
+        private Boolean _WaitingMoveConfirmationFromHost = false;
 
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
@@ -33,10 +37,9 @@ namespace TicTacToe.Game
             _MessageHandlers.Add(Command.MOVE_CONFIRM, HandleMoveConfirm);
             _MessageHandlers.Add(Command.MOVE_DENY, HandleMoveDeny);
             _MessageHandlers.Add(Command.BOARD_STATE, HandleBoardState);
+            _MessageHandlers.Add(Command.GAME_WON, HandleGameWon);
             _MessageHandlers.Add(Command.EXIT, HandleExit);
         }
-
-        
 
         /// <summary> Main game loop </summary>
         public void Run()
@@ -46,8 +49,6 @@ namespace TicTacToe.Game
             DetermineHost();
 
             SetUpConnection();
-
-            _PlayerChar = _IsHost ? 'X' : 'O';
 
             if (_IsHost)
             {
@@ -64,11 +65,22 @@ namespace TicTacToe.Game
                     {
                         Move move = GetMove();
 
-                        _GameBoard[move.X, move.Y] = _PlayerChar;
+                        _GameBoard[move.X, move.Y] = HOST_CHAR;
 
-                        if (GameWon())
+                        if (IsGameWon(HOST_CHAR))
                         {
-                            
+                            _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), HOST_CHAR.ToString()));
+                            Packet packet = _MessageService.AwaitPacket();
+                            if (Enum.TryParse(packet.Command, out Command command))
+                            {
+                                if (command == Command.PACKET_RECEIVED)
+                                {
+                                    _MessageService.SendPacket(GameBoardAsPacket());
+                                }
+                            }
+
+                            DrawGameBoard();
+                            Console.WriteLine("Congratulations, you won!");
                         }
 
                         _MessageService.SendPacket(GameBoardAsPacket());
@@ -77,15 +89,15 @@ namespace TicTacToe.Game
                     }
                     else
                     {
-                        Packet moveRequest = _MessageService.AwaitPacket();
+                        _WaitingValidMoveFromClient = true;
 
-                        HandlePacket(moveRequest);
+                        Console.WriteLine("Opponent is thinking....");
 
-                        // update board
-
-                        // check for win
-
-                        // send game state
+                        while (_WaitingValidMoveFromClient)
+                        {
+                            Packet moveRequest = _MessageService.AwaitPacket();
+                            HandlePacket(moveRequest);
+                        }
 
                         _Moving = true;
                     }
@@ -94,21 +106,29 @@ namespace TicTacToe.Game
                 {
                     if (_Moving)
                     {
-                        // get input
+                        _WaitingMoveConfirmationFromHost = true;
 
-                        // validate move
+                        while (_WaitingMoveConfirmationFromHost)
+                        {
+                            DrawGameBoard();
+                            Move move = GetMove();
+                            _MessageService.SendPacket(new Packet(Command.MOVE_REQUEST.ToString(), move.ToString()));
+                            Packet resp = _MessageService.AwaitPacket();
+                            HandlePacket(resp);
+                        }
 
-                        // send input to host
-
-                        // await reply
-
-                        // handle reply
+                        Packet packet = _MessageService.AwaitPacket();
+                        HandlePacket(packet);
+                        _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
 
                         _Moving = false;
                     }
                     else
                     {
-                        // await host move
+                        Console.WriteLine($"Opponent is thinking...");
+
+                        Packet packet = _MessageService.AwaitPacket();
+                        HandlePacket(packet);
 
                         _Moving = true;
                     }
@@ -277,13 +297,13 @@ namespace TicTacToe.Game
             return _GameBoard[move.X, move.Y] == '-';
         }
 
-        private Boolean GameWon()
+        private Boolean IsGameWon(Char playerChar)
         {
-            if (_GameBoard[0, 0] == _PlayerChar && _GameBoard[0, 1] == _PlayerChar && _GameBoard[0, 2] == _PlayerChar) return true;
-            if (_GameBoard[1, 0] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[1, 2] == _PlayerChar) return true;
-            if (_GameBoard[2, 0] == _PlayerChar && _GameBoard[2, 1] == _PlayerChar && _GameBoard[2, 2] == _PlayerChar) return true;
-            if (_GameBoard[0, 0] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[2, 2] == _PlayerChar) return true;
-            if (_GameBoard[0, 2] == _PlayerChar && _GameBoard[1, 1] == _PlayerChar && _GameBoard[2, 0] == _PlayerChar) return true;
+            if (_GameBoard[0, 0] == playerChar && _GameBoard[0, 1] == playerChar && _GameBoard[0, 2] == playerChar) return true;
+            if (_GameBoard[1, 0] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[1, 2] == playerChar) return true;
+            if (_GameBoard[2, 0] == playerChar && _GameBoard[2, 1] == playerChar && _GameBoard[2, 2] == playerChar) return true;
+            if (_GameBoard[0, 0] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 2] == playerChar) return true;
+            if (_GameBoard[0, 2] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 0] == playerChar) return true;
             return false;
         }
 
@@ -310,19 +330,46 @@ namespace TicTacToe.Game
             Console.WriteLine($"{message}");
         }
 
-        private void HandleMoveRequest(String move)
+        private void HandleMoveRequest(String moveString)
         {
+            Move move = Move.FromString(moveString);
 
+            if (IsMoveValid(move))
+            {
+                _GameBoard[move.X, move.Y] = CLIENT_CHAR;
+
+                if (IsGameWon(CLIENT_CHAR))
+                {
+                    _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), CLIENT_CHAR.ToString()));
+                }
+                else
+                {
+                    _MessageService.SendPacket(GameBoardAsPacket());    
+                }
+
+                Packet resp = _MessageService.AwaitPacket();
+
+                if (!Enum.TryParse(resp.Command, out Command command)) return;
+
+                if (command == Command.PACKET_RECEIVED)
+                {
+                    _WaitingValidMoveFromClient = false;
+                }
+            }
+            else
+            {
+                _MessageService.SendPacket(new Packet(Command.MOVE_DENY.ToString()));
+            }
         }
 
         private void HandleMoveConfirm(String message)
         {
-
+            _WaitingMoveConfirmationFromHost = false;
         }
 
         private void HandleMoveDeny(String message)
         {
-
+            Console.WriteLine($"Move was denied by host...");
         }
 
         private void HandleExit(String message)
@@ -346,6 +393,22 @@ namespace TicTacToe.Game
 
             DrawGameBoard();
             Console.WriteLine($"Game board updated!");
+        }
+
+        private void HandleGameWon(String message)
+        {
+            if (!Char.TryParse(message, out Char winner)) return;
+
+            if (winner == HOST_CHAR)
+            {
+                DrawGameBoard();
+                Console.WriteLine($"Unlucky, you lost!");
+            }
+            else
+            {
+                DrawGameBoard();
+                Console.WriteLine($"Congratulations, you won!");
+            }
         }
 
         private void DrawGameBoard()
