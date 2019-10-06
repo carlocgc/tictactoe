@@ -80,6 +80,8 @@ namespace TicTacToe.Game
                             HandleGameWon(HOST_CHAR.ToString());
                         }
 
+                        _MessageService.SendPacket(GameBoardAsPacket());
+
                         _Moving = false;
                     }
                     else
