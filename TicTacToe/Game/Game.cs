@@ -227,7 +227,7 @@ namespace TicTacToe.Game
             {
                 DrawGameBoard();
                 Console.WriteLine();
-                Console.WriteLine($"Enter a valid move in format \"X,X\" (1-3)");
+                Console.WriteLine($"Enter a valid move in format \"X,X\" (0-2)");
                 if (lastError != String.Empty)
                 {
                     Console.WriteLine($"{lastError}");
