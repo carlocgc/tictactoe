@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
-using System.Xml;
 using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
@@ -13,6 +11,14 @@ namespace TicTacToe.Game
     {
         private const Char HOST_CHAR = 'X';
         private const Char CLIENT_CHAR = 'O';
+        /// <summary> The symbol that the player is using </summary>
+        private Char _PlayerChar;
+        /// <summary> Whether the current game is won </summary>
+        private Boolean _GameWon;
+        /// <summary> How many games the host has won </summary>
+        private Int32 HostScore = 0;
+        /// <summary> How many games the client has won </summary>
+        private Int32 ClientScore = 0;
         /// <summary> Message handler functions  </summary>
         private readonly Dictionary<Command, Action<String>> _MessageHandlers = new Dictionary<Command, Action<String>>();
         /// <summary> Sends and receives messages as packets </summary>
@@ -51,15 +57,15 @@ namespace TicTacToe.Game
 
             SetUpConnection();
 
-            if (_IsHost)
-            {
-                _Moving = true;
-            }
+            _GameWon = false;
+            _Moving = _IsHost;
+            _PlayerChar = _IsHost ? HOST_CHAR : CLIENT_CHAR;
 
             _Running = true;
 
             while (_Running)
             {
+                
                 DrawGameBoard();
 
                 if (_IsHost)
@@ -132,8 +138,12 @@ namespace TicTacToe.Game
                         _Moving = true;
                     }
                 }
+
+                _Running = !_GameWon;
+                // TODO Play again logic?
             }
 
+            Console.WriteLine($"Game exiting...");
             Console.ReadKey();
         }
 
@@ -407,6 +417,7 @@ namespace TicTacToe.Game
                 Console.WriteLine($"Congratulations, you won!");
             }
 
+            _GameWon = true;
             _WaitingMoveConfirmationFromHost = false;
         }
 
@@ -415,6 +426,7 @@ namespace TicTacToe.Game
             Console.Clear();
             Console.WriteLine();
             Console.WriteLine($"          TicTacToe.");
+            Console.WriteLine($"     Your symbol: \"{_PlayerChar}\"");
             Console.WriteLine($"_____________________________");
             Console.WriteLine();
             Console.WriteLine($"      {_GameBoard[0,0]}   |   {_GameBoard[0,1]}   |   {_GameBoard[0,2]}   ");
