@@ -18,6 +18,8 @@ namespace TicTacToe.Game
         private Boolean _Running = false;
         /// <summary> Whether its the players turn </summary>
         private Boolean _Moving;
+        /// <summary> The game board data </summary>
+        private Char[,] _GameBoard = { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
 
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
@@ -28,6 +30,8 @@ namespace TicTacToe.Game
         /// <summary> Main game loop </summary>
         public void Run()
         {
+            DrawGameBoard();
+
             Initialise();
 
             DetermineHost();
@@ -64,7 +68,7 @@ namespace TicTacToe.Game
                         // update board
 
                         // check for win
-                        
+
                         // send game state
 
                         _Moving = true;
@@ -187,6 +191,21 @@ namespace TicTacToe.Game
         private void HandleBoardState(String state)
         {
 
+        }
+
+        private void DrawGameBoard()
+        {
+            Console.Clear();
+            Console.WriteLine();
+            Console.WriteLine($"          TicTacToe.");
+            Console.WriteLine($"_____________________________");
+            Console.WriteLine();
+            Console.WriteLine($"      {_GameBoard[0,0]}   |   {_GameBoard[0,1]}   |   {_GameBoard[0,2]}   ");
+            Console.WriteLine($"   -------|-------|-------");
+            Console.WriteLine($"      {_GameBoard[1,0]}   |   {_GameBoard[1,1]}   |   {_GameBoard[1,2]}   ");
+            Console.WriteLine($"   -------|-------|-------");
+            Console.WriteLine($"      {_GameBoard[2,0]}   |   {_GameBoard[2,1]}   |   {_GameBoard[2,2]}   ");
+            Console.WriteLine($"_____________________________");
         }
     }
 }
