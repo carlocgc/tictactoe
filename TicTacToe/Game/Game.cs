@@ -119,10 +119,7 @@ namespace TicTacToe.Game
                             HandlePacket(resp);
                         }
 
-                        Packet packet = _MessageService.AwaitPacket();
-                        HandlePacket(packet);
                         _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
-
                         _Moving = false;
                     }
                     else
