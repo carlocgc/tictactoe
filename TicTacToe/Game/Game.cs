@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Net;
 using System.Threading;
-using Newtonsoft.Json;
 using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
@@ -31,7 +29,14 @@ namespace TicTacToe.Game
         private void Initialise()
         {
             _MessageHandlers.Add(Command.MESSAGE, HandleMessage);
+            _MessageHandlers.Add(Command.MOVE_REQUEST, HandleMoveRequest);
+            _MessageHandlers.Add(Command.MOVE_CONFIRM, HandleMoveConfirm);
+            _MessageHandlers.Add(Command.MOVE_DENY, HandleMoveDeny);
+            _MessageHandlers.Add(Command.BOARD_STATE, HandleBoardState);
+            _MessageHandlers.Add(Command.EXIT, HandleExit);
         }
+
+        
 
         /// <summary> Main game loop </summary>
         public void Run()
@@ -41,27 +46,6 @@ namespace TicTacToe.Game
             DetermineHost();
 
             SetUpConnection();
-
-
-            // Game board send test
-
-            if (_IsHost)
-            {
-                _MessageService.SendPacket(GameBoardAsPacket());
-
-                Packet packet = _MessageService.AwaitPacket();
-
-                Console.ReadKey();
-            }
-            else
-            {
-                Packet packet = _MessageService.AwaitPacket();
-
-                HandlePacket(packet);
-
-                Console.ReadKey();
-            }
-
 
             _PlayerChar = _IsHost ? 'X' : 'O';
 
@@ -84,7 +68,7 @@ namespace TicTacToe.Game
 
                         if (GameWon())
                         {
-                            // TODO handle game won
+                            
                         }
 
                         _MessageService.SendPacket(GameBoardAsPacket());
@@ -93,9 +77,9 @@ namespace TicTacToe.Game
                     }
                     else
                     {
-                        // await move request
+                        Packet moveRequest = _MessageService.AwaitPacket();
 
-                        // validate move and reply
+                        HandlePacket(moveRequest);
 
                         // update board
 
@@ -275,7 +259,7 @@ namespace TicTacToe.Game
                     continue;
                 }
 
-                if (_GameBoard[tempX, tempY] != '-')
+                if (!IsMoveValid(new Move(tempX, tempY)))
                 {
                     Console.WriteLine($"({tempX}, {tempY}) is already taken by \"{_GameBoard[tempX, tempY]}\", try again...");
                     continue;
@@ -286,6 +270,11 @@ namespace TicTacToe.Game
                 valid = true;
             }
             return new Move(x, y);
+        }
+
+        private Boolean IsMoveValid(Move move)
+        {
+            return _GameBoard[move.X, move.Y] == '-';
         }
 
         private Boolean GameWon()
@@ -331,9 +320,14 @@ namespace TicTacToe.Game
 
         }
 
-        private void HandleInputDeny(String message)
+        private void HandleMoveDeny(String message)
         {
 
+        }
+
+        private void HandleExit(String message)
+        {
+            throw new NotImplementedException();
         }
 
         private void HandleBoardState(String state)
