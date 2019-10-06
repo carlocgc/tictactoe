@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Net;
 using System.Threading;
 using Newtonsoft.Json;
@@ -12,7 +13,7 @@ namespace TicTacToe.Game
     public class Game
     {
         /// <summary> Message handler functions  </summary>
-        private readonly Dictionary<Command, Func<String, Boolean>> _MessageHandlers = new Dictionary<Command, Func<String, Boolean>>();
+        private readonly Dictionary<Command, Action<String>> _MessageHandlers = new Dictionary<Command, Action<String>>();
         /// <summary> Sends and receives messages as packets </summary>
         private MessageService _MessageService;
         /// <summary> Whether or not this player is the game host </summary>
@@ -40,6 +41,27 @@ namespace TicTacToe.Game
             DetermineHost();
 
             SetUpConnection();
+
+
+            // Game board send test
+
+            if (_IsHost)
+            {
+                _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), JsonConvert.SerializeObject(_GameBoard)));
+
+                Packet packet = _MessageService.AwaitPacket();
+
+                Console.ReadKey();
+            }
+            else
+            {
+                Packet packet = _MessageService.AwaitPacket();
+
+                _GameBoard = JsonConvert.DeserializeObject<Char[,]>(packet.Message);
+
+                Console.ReadKey();
+            }
+
 
             _PlayerChar = _IsHost ? 'X' : 'O';
 
@@ -271,9 +293,18 @@ namespace TicTacToe.Game
             return false;
         }
 
-        private Boolean HandleMessage(String message)
+        private void HandlePacket(Packet packet)
         {
-            return false;
+            if (Enum.TryParse(packet.Command, true, out Command command))
+            {
+                _MessageHandlers[command].Invoke(packet.Message);
+            }
+        }
+
+        private void HandleMessage(String message)
+        {
+            DrawGameBoard();
+            Console.WriteLine($"{message}");
         }
 
         private void HandleMoveRequest(String move)
@@ -293,7 +324,9 @@ namespace TicTacToe.Game
 
         private void HandleBoardState(String state)
         {
-
+            _GameBoard = JsonConvert.DeserializeObject<Char[,]>(state);
+            DrawGameBoard();
+            Console.WriteLine($"Game board updated!");
         }
 
         private void DrawGameBoard()
