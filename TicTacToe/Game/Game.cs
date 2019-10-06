@@ -338,6 +338,7 @@ namespace TicTacToe.Game
                 if (IsGameWon(CLIENT_CHAR))
                 {
                     _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), CLIENT_CHAR.ToString()));
+                    HandleGameWon(CLIENT_CHAR.ToString());
                 }
                 else
                 {
