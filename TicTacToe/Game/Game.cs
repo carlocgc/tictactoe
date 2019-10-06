@@ -59,6 +59,8 @@ namespace TicTacToe.Game
 
             while (_Running)
             {
+                DrawGameBoard();
+
                 if (_IsHost)
                 {
                     if (_Moving)
@@ -79,7 +81,6 @@ namespace TicTacToe.Game
                                 }
                             }
 
-                            DrawGameBoard();
                             Console.WriteLine("Congratulations, you won!");
                         }
 
