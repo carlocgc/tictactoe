@@ -47,7 +47,7 @@ namespace TicTacToe.Game
 
             if (_IsHost)
             {
-                _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), JsonConvert.SerializeObject(_GameBoard)));
+                _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), ));
 
                 Packet packet = _MessageService.AwaitPacket();
 
@@ -87,7 +87,7 @@ namespace TicTacToe.Game
                             // TODO handle game won
                         }
 
-                        _MessageService.SendPacket(new Packet(Command.BOARD_STATE.ToString(), JsonConvert.SerializeObject(_GameBoard)));
+                        _MessageService.SendPacket(GameBoardAsPacket());
 
                         _Moving = false;
                     }
@@ -293,6 +293,15 @@ namespace TicTacToe.Game
             return false;
         }
 
+        private Packet GameBoardAsPacket()
+        {
+            String gameBoardString = $"{_GameBoard[0, 0]}:{_GameBoard[1, 0]}:{_GameBoard[2, 0]}:" +
+                                     $"{_GameBoard[1, 0]}:{_GameBoard[1, 1]}:{_GameBoard[2, 1]}:" +
+                                     $"{_GameBoard[2, 0]}:{_GameBoard[1, 2]}:{_GameBoard[2, 2]}";
+
+            return new Packet(Command.BOARD_STATE.ToString(), gameBoardString);
+        }
+
         private void HandlePacket(Packet packet)
         {
             if (Enum.TryParse(packet.Command, true, out Command command))
@@ -324,7 +333,18 @@ namespace TicTacToe.Game
 
         private void HandleBoardState(String state)
         {
-            _GameBoard = JsonConvert.DeserializeObject<Char[,]>(state);
+            String[] parts = state.Split(':');
+            Int32 count = 0;
+
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    _GameBoard[x, y] = Char.Parse(parts[count]);
+                    count++;
+                }
+            }
+
             DrawGameBoard();
             Console.WriteLine($"Game board updated!");
         }
