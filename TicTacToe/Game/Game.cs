@@ -65,7 +65,6 @@ namespace TicTacToe.Game
 
             while (_Running)
             {
-                
                 DrawGameBoard();
 
                 if (_IsHost)
@@ -78,20 +77,8 @@ namespace TicTacToe.Game
 
                         if (IsGameWon(HOST_CHAR))
                         {
-                            _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), HOST_CHAR.ToString()));
-                            Packet packet = _MessageService.AwaitPacket();
-                            if (Enum.TryParse(packet.Command, out Command command))
-                            {
-                                if (command == Command.PACKET_RECEIVED)
-                                {
-                                    _MessageService.SendPacket(GameBoardAsPacket());
-                                }
-                            }
-
-                            Console.WriteLine("Congratulations, you won!");
+                            HandleGameWon(HOST_CHAR.ToString());
                         }
-
-                        _MessageService.SendPacket(GameBoardAsPacket());
 
                         _Moving = false;
                     }
@@ -406,16 +393,29 @@ namespace TicTacToe.Game
         {
             if (!Char.TryParse(message, out Char winner)) return;
 
-            if (winner == HOST_CHAR)
+            if (_IsHost)
             {
-                DrawGameBoard();
-                Console.WriteLine($"Unlucky, you lost!");
+                _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), HOST_CHAR.ToString()));
+                Packet packet = _MessageService.AwaitPacket();
+                if (Enum.TryParse(packet.Command, out Command command))
+                {
+                    if (command == Command.PACKET_RECEIVED)
+                    {
+                        _MessageService.SendPacket(GameBoardAsPacket());
+                    }
+                }
             }
             else
             {
+                _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
+                Packet packet = _MessageService.AwaitPacket();
+                HandlePacket(packet);
                 DrawGameBoard();
-                Console.WriteLine($"Congratulations, you won!");
             }
+
+            DrawGameBoard();
+
+            Console.WriteLine(winner == _PlayerChar ? $"Congratulations, you won!" : $"Unlucky, you lost!");
 
             _GameWon = true;
             _WaitingMoveConfirmationFromHost = false;
