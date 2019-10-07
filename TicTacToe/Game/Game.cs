@@ -132,7 +132,42 @@ namespace TicTacToe.Game
                 // TODO Play again logic?
             }
 
-            Console.WriteLine($"Game exiting...");
+            if (_IsHost)
+            {
+                String rematch = String.Empty;
+
+                while (rematch.ToLower() != "y" || rematch.ToLower() != "n")
+                {
+                    Console.WriteLine($"Rematch?... y/n");
+                    rematch = Console.ReadLine() ?? "";
+                }
+
+                if (rematch == "y")
+                {
+                    _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), rematch));
+                    Packet resp = _MessageService.AwaitPacket();
+
+                    if (resp.Message == rematch)
+                    {
+                        Run();
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Awaiting rematch instruction from host...");
+                Packet packet = _MessageService.AwaitPacket();
+                if (packet.Message == "y")
+                {
+                    Run();
+                }
+                else
+                {
+                    Console.WriteLine($"Host declined a rematch...");
+                }
+            }
+
+            Console.WriteLine($"Game Exiting...");
             Console.ReadKey();
         }
 
