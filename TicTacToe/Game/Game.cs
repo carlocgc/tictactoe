@@ -301,6 +301,9 @@ namespace TicTacToe.Game
             if (_GameBoard[2, 0] == playerChar && _GameBoard[2, 1] == playerChar && _GameBoard[2, 2] == playerChar) return true;
             if (_GameBoard[0, 0] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 2] == playerChar) return true;
             if (_GameBoard[0, 2] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 0] == playerChar) return true;
+            if (_GameBoard[0, 0] == playerChar && _GameBoard[1, 0] == playerChar && _GameBoard[2, 0] == playerChar) return true;
+            if (_GameBoard[0, 1] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 1] == playerChar) return true;
+            if (_GameBoard[0, 2] == playerChar && _GameBoard[1, 2] == playerChar && _GameBoard[2, 2] == playerChar) return true;
             return false;
         }
 
@@ -338,6 +341,14 @@ namespace TicTacToe.Game
                 if (IsGameWon(CLIENT_CHAR))
                 {
                     _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), CLIENT_CHAR.ToString()));
+                    Packet wonResp = _MessageService.AwaitPacket();
+
+                    if (!Enum.TryParse(wonResp.Command, out Command wonRespCommand)) return;
+
+                    if (wonRespCommand == Command.PACKET_RECEIVED)
+                    {
+                        _MessageService.SendPacket(GameBoardAsPacket());
+                    }
                     HandleGameWon(CLIENT_CHAR.ToString());
                 }
                 else
