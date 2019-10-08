@@ -180,25 +180,32 @@ namespace TicTacToe.Game
 
             while (!valid)
             {
+                Console.Clear();
                 Console.WriteLine("Welcome to TicTacToe");
-                Console.WriteLine("Enter \"Host\" or \"Client\"....");
+                Console.WriteLine($"----------------------");
+                Console.WriteLine($"1. Host");
+                Console.WriteLine($"2. Client");
+                Console.WriteLine($"----------------------");
+                Console.WriteLine($"Enter selection...");
                 String resp = Console.ReadLine();
 
                 if (resp == null) continue;
 
-                if (resp.ToLower() == "host")
+                if (resp.ToLower() == "host" || resp.ToLower() == "1")
                 {
                     _IsHost = true;
                     valid = true;
                 }
-                else if (resp.ToLower() == "client")
+                else if (resp.ToLower() == "client" || resp.ToLower() == "2")
                 {
                     _IsHost = false;
                     valid = true;
                 }
                 else
                 {
-                    Console.WriteLine($"Invalid input...");
+                    Console.WriteLine($"Invalid option...");
+                    Console.WriteLine($"Press enter to try again.");
+                    Console.ReadKey();
                 }
             }
         }
@@ -239,7 +246,10 @@ namespace TicTacToe.Game
                 // TODO Remove this test code
 
                 IPAddress ip = IPAddress.Parse("192.168.0.10");
+
                 _MessageService.ConnectToHost(ip, 6600);
+
+                Console.WriteLine($"Connected to host game.");
             }
         }
 
@@ -382,9 +392,8 @@ namespace TicTacToe.Game
 
                     if (wonRespCommand == Command.PACKET_RECEIVED)
                     {
-                        _MessageService.SendPacket(GameBoardAsPacket());
+                        HandleGameWon(CLIENT_CHAR.ToString());    
                     }
-                    HandleGameWon(CLIENT_CHAR.ToString());
                 }
                 else
                 {

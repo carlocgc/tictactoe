@@ -75,10 +75,12 @@ namespace TicTacToe.Network
                 if (!_Client.Connected) continue;
 
                 _Connected = true;
-                Console.WriteLine($"{_Client.Client.RemoteEndPoint} connected...");
+                Console.WriteLine($"Client {_Client.Client.RemoteEndPoint} has connected to the game.");
             }
 
             _MsgStream = _Client.GetStream();
+
+
         }
 
         /// <summary>
