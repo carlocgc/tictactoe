@@ -136,7 +136,7 @@ namespace TicTacToe.Game
             {
                 String rematch = String.Empty;
 
-                while (rematch.ToLower() != "y" || rematch.ToLower() != "n")
+                while (rematch.ToLower() != "y" && rematch.ToLower() != "n")
                 {
                     Console.WriteLine($"Rematch?... y/n");
                     rematch = Console.ReadLine() ?? "";
@@ -149,6 +149,7 @@ namespace TicTacToe.Game
 
                     if (resp.Message == rematch)
                     {
+                        ResetGame();
                         Run();
                     }
                 }
@@ -159,6 +160,7 @@ namespace TicTacToe.Game
                 Packet packet = _MessageService.AwaitPacket();
                 if (packet.Message == "y")
                 {
+                    ResetGame();
                     Run();
                 }
                 else
@@ -493,6 +495,12 @@ namespace TicTacToe.Game
             Console.WriteLine($"   -------|-------|-------");
             Console.WriteLine($"      {_GameBoard[2,0]}   |   {_GameBoard[2,1]}   |   {_GameBoard[2,2]}   ");
             Console.WriteLine($"_____________________________");
+        }
+
+        private void ResetGame()
+        {
+            _MessageHandlers.Clear();
+            _GameBoard = new Char[,] { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
         }
     }
 }
