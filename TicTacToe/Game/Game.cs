@@ -79,10 +79,11 @@ namespace TicTacToe.Game
                         {
                             HandleGameWon(HOST_CHAR.ToString());
                         }
-
-                        _MessageService.SendPacket(GameBoardAsPacket());
-
-                        _Moving = false;
+                        else
+                        {
+                            _MessageService.SendPacket(GameBoardAsPacket());
+                            _Moving = false;                            
+                        }
                     }
                     else
                     {
@@ -501,6 +502,7 @@ namespace TicTacToe.Game
         {
             _MessageHandlers.Clear();
             _GameBoard = new Char[,] { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
+            _Moving = _IsHost;
         }
     }
 }
