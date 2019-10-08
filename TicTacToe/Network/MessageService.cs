@@ -21,7 +21,7 @@ namespace TicTacToe.Network
         /// <summary> The clients message stream </summary>
         private NetworkStream _MsgStream;
         /// <summary> Whether the message service is connected to the client </summary>
-        private Boolean _Connected;
+        public Boolean Connected { get; private set; }
 
         public MessageService()
         {
@@ -38,7 +38,7 @@ namespace TicTacToe.Network
             }
             _LocalPort = 6600;
             _ServerListener = new TcpListener(_LocalAddress, _LocalPort);
-            _Connected = false;
+            Connected = false;
         }
 
         /// <summary> Gets the environment IPv4 address </summary>
@@ -66,7 +66,7 @@ namespace TicTacToe.Network
 
             _ServerListener.Start();
 
-            while (!_Connected)
+            while (!Connected)
             {
                 if (!_ServerListener.Pending()) continue;
 
@@ -74,7 +74,7 @@ namespace TicTacToe.Network
 
                 if (!_Client.Connected) continue;
 
-                _Connected = true;
+                Connected = true;
                 Console.WriteLine($"Client {_Client.Client.RemoteEndPoint} has connected to the game.");
             }
 
@@ -105,7 +105,7 @@ namespace TicTacToe.Network
 
             if (_Client.Connected)
             {
-                _Connected = true;
+                Connected = true;
                 _MsgStream = _Client.GetStream();
                 return true;
             }

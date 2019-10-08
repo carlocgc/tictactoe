@@ -16,9 +16,13 @@ namespace TicTacToe.Game
         /// <summary> Whether the current game is won </summary>
         private Boolean _GameWon;
         /// <summary> How many games the host has won </summary>
-        private Int32 HostScore = 0;
+        private Int32 _HostScore = 0;
         /// <summary> How many games the client has won </summary>
-        private Int32 ClientScore = 0;
+        private Int32 _ClientScore = 0;
+        /// <summary> The players score </summary>
+        private Int32 _PlayerScore => _IsHost ? _HostScore : _ClientScore;
+        /// <summary> The opponents score </summary>
+        private Int32 _OpponentScore => _IsHost ? _ClientScore : _HostScore;
         /// <summary> Message handler functions  </summary>
         private readonly Dictionary<Command, Action<String>> _MessageHandlers = new Dictionary<Command, Action<String>>();
         /// <summary> Sends and receives messages as packets </summary>
@@ -27,6 +31,8 @@ namespace TicTacToe.Game
         private Boolean _IsHost;
         /// <summary> Whether the game is running </summary>
         private Boolean _Running = false;
+        /// <summary> Whether the game is initialised </summary>
+        private Boolean _Initialised = false;
         /// <summary> Whether its the players turn </summary>
         private Boolean _Moving;
         /// <summary> The game board data </summary>
@@ -46,16 +52,20 @@ namespace TicTacToe.Game
             _MessageHandlers.Add(Command.BOARD_STATE, HandleBoardState);
             _MessageHandlers.Add(Command.GAME_WON, HandleGameWon);
             _MessageHandlers.Add(Command.EXIT, HandleExit);
+
+            DetermineHost();
+            SetUpConnection();
+
+            _Initialised = true;
         }
 
         /// <summary> Main game loop </summary>
         public void Run()
         {
-            Initialise();
-
-            DetermineHost();
-
-            SetUpConnection();
+            if (!_Initialised)
+            {
+                Initialise();
+            }
 
             _GameWon = false;
             _Moving = _IsHost;
@@ -82,7 +92,7 @@ namespace TicTacToe.Game
                         else
                         {
                             _MessageService.SendPacket(GameBoardAsPacket());
-                            _Moving = false;                            
+                            _Moving = false;
                         }
                     }
                     else
@@ -218,6 +228,8 @@ namespace TicTacToe.Game
         /// </summary>
         private void SetUpConnection()
         {
+            if (_MessageService != null && _MessageService.Connected) return;
+
             _MessageService = new MessageService();
 
             if (_IsHost)
@@ -395,12 +407,12 @@ namespace TicTacToe.Game
 
                     if (wonRespCommand == Command.PACKET_RECEIVED)
                     {
-                        HandleGameWon(CLIENT_CHAR.ToString());    
+                        HandleGameWon(CLIENT_CHAR.ToString());
                     }
                 }
                 else
                 {
-                    _MessageService.SendPacket(GameBoardAsPacket());    
+                    _MessageService.SendPacket(GameBoardAsPacket());
                 }
 
                 Packet resp = _MessageService.AwaitPacket();
@@ -471,12 +483,19 @@ namespace TicTacToe.Game
                 _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
                 Packet packet = _MessageService.AwaitPacket();
                 HandlePacket(packet);
-                DrawGameBoard();
             }
 
             DrawGameBoard();
-
             Console.WriteLine(winner == _PlayerChar ? $"Congratulations, you won!" : $"Unlucky, you lost!");
+
+            if (message == HOST_CHAR.ToString())
+            {
+                _HostScore++;
+            }
+            else
+            {
+                _ClientScore++;
+            }
 
             _GameWon = true;
             _WaitingMoveConfirmationFromHost = false;
@@ -485,24 +504,28 @@ namespace TicTacToe.Game
         private void DrawGameBoard()
         {
             Console.Clear();
+            
             Console.WriteLine();
+            Console.WriteLine($"_____________________________");
             Console.WriteLine($"          TicTacToe.");
-            Console.WriteLine($"     Your symbol: \"{_PlayerChar}\"");
+            Console.WriteLine();
+            Console.WriteLine($"     Your Symbol: \"{_PlayerChar}\"");
+            Console.WriteLine();
+            Console.WriteLine($"Your Score: {_PlayerScore} | Opponent Score: {_OpponentScore}");
             Console.WriteLine($"_____________________________");
             Console.WriteLine();
-            Console.WriteLine($"      {_GameBoard[0,0]}   |   {_GameBoard[0,1]}   |   {_GameBoard[0,2]}   ");
+            Console.WriteLine($"      {_GameBoard[0, 0]}   |   {_GameBoard[0, 1]}   |   {_GameBoard[0, 2]}   ");
             Console.WriteLine($"   -------|-------|-------");
-            Console.WriteLine($"      {_GameBoard[1,0]}   |   {_GameBoard[1,1]}   |   {_GameBoard[1,2]}   ");
+            Console.WriteLine($"      {_GameBoard[1, 0]}   |   {_GameBoard[1, 1]}   |   {_GameBoard[1, 2]}   ");
             Console.WriteLine($"   -------|-------|-------");
-            Console.WriteLine($"      {_GameBoard[2,0]}   |   {_GameBoard[2,1]}   |   {_GameBoard[2,2]}   ");
+            Console.WriteLine($"      {_GameBoard[2, 0]}   |   {_GameBoard[2, 1]}   |   {_GameBoard[2, 2]}   ");
             Console.WriteLine($"_____________________________");
         }
 
         private void ResetGame()
         {
             _MessageHandlers.Clear();
-            _GameBoard = new Char[,] { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
-            _Moving = _IsHost;
+            _GameBoard = new Char[,] { { '-', '-', '-' }, { '-', '-', '-' }, { '-', '-', '-' } };
         }
     }
 }
