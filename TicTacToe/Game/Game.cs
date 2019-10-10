@@ -171,9 +171,9 @@ namespace TicTacToe.Game
                 Packet packet = _MessageService.AwaitPacket();
                 if (packet.Message == "y")
                 {
+                    _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), "rematch"));
                     ResetGame();
                     Run();
-                    _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), "rematch"));
                 }
                 else
                 {
