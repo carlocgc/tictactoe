@@ -173,6 +173,7 @@ namespace TicTacToe.Game
                 {
                     ResetGame();
                     Run();
+                    _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), "rematch"));
                 }
                 else
                 {
@@ -504,14 +505,13 @@ namespace TicTacToe.Game
         private void DrawGameBoard()
         {
             Console.Clear();
-            
-            Console.WriteLine();
             Console.WriteLine($"_____________________________");
             Console.WriteLine($"          TicTacToe.");
             Console.WriteLine();
             Console.WriteLine($"     Your Symbol: \"{_PlayerChar}\"");
             Console.WriteLine();
-            Console.WriteLine($"Your Score: {_PlayerScore} | Opponent Score: {_OpponentScore}");
+            Console.WriteLine($"        Your Score: {_PlayerScore}");
+            Console.WriteLine($"     Opponent Score: {_OpponentScore}");
             Console.WriteLine($"_____________________________");
             Console.WriteLine();
             Console.WriteLine($"      {_GameBoard[0, 0]}   |   {_GameBoard[0, 1]}   |   {_GameBoard[0, 2]}   ");
