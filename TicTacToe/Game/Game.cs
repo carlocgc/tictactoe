@@ -158,7 +158,7 @@ namespace TicTacToe.Game
                     _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), rematch));
                     Packet resp = _MessageService.AwaitPacket();
 
-                    if (resp.Message == rematch)
+                    if (resp.Message == "rematch")
                     {
                         ResetGame();
                         Run();
