@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using TicTacToe.Data;
 
 namespace TicTacToe.Network
@@ -93,25 +94,23 @@ namespace TicTacToe.Network
         {
             _Client = new TcpClient();
 
-            try
+            while (!_Client.Connected)
             {
-                _Client.Connect(hostAddress, port);
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine($"Error connecting to host {hostAddress} : {e.Message}");
-                return false;
-            }
-
-            if (_Client.Connected)
-            {
-                Connected = true;
-                _MsgStream = _Client.GetStream();
-                return true;
+                try
+                {
+                    _Client.Connect(hostAddress, port);
+                }
+                catch (SocketException e)
+                {
+                    Console.Clear();
+                    Console.WriteLine($"Host {hostAddress}:{port} not found...");
+                }
+                Thread.Sleep(10);
             }
 
-            Console.WriteLine($"Unable to connect to host {hostAddress}...");
-            return false;
+            Connected = true;
+            _MsgStream = _Client.GetStream();
+            return Connected;
         }
 
         /// <summary>
