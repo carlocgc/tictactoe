@@ -24,6 +24,8 @@ namespace TicTacToe.Network
         /// <summary> Whether the message service is connected to the client </summary>
         public Boolean Connected { get; private set; }
 
+        public Boolean Master { get; private set; }
+
         public MessageService()
         {
             try
@@ -58,6 +60,45 @@ namespace TicTacToe.Network
         }
 
         /// <summary>
+        /// Asks the player if they are a host or a client and configures the network accordingly
+        /// </summary>
+        public void Initialise()
+        {
+            Boolean valid = false;
+
+            while (!valid)
+            {
+                Console.Clear();
+                Console.WriteLine("Welcome to TicTacToe");
+                Console.WriteLine($"----------------------");
+                Console.WriteLine($"1. Host");
+                Console.WriteLine($"2. Client");
+                Console.WriteLine($"----------------------");
+                Console.WriteLine($"Enter selection...");
+                String resp = Console.ReadLine();
+
+                if (resp == null) continue;
+
+                if (resp.ToLower() == "host" || resp.ToLower() == "1")
+                {
+                    Master = true;
+                    valid = true;
+                }
+                else if (resp.ToLower() == "client" || resp.ToLower() == "2")
+                {
+                    Master = false;
+                    valid = true;
+                }
+                else
+                {
+                    Console.WriteLine($"Invalid option...");
+                    Console.WriteLine($"Press enter to try again.");
+                    Console.ReadKey();
+                }
+            }
+        }
+
+        /// <summary>
         /// Wait for an opponent, called by the host game
         /// </summary>
         public void WaitForClient()
@@ -80,8 +121,6 @@ namespace TicTacToe.Network
             }
 
             _MsgStream = _Client.GetStream();
-
-
         }
 
         /// <summary>
@@ -110,6 +149,9 @@ namespace TicTacToe.Network
 
             Connected = true;
             _MsgStream = _Client.GetStream();
+
+            Console.WriteLine($"Connected to host game {_Client.Client.RemoteEndPoint}");
+
             return Connected;
         }
 

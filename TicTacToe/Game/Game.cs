@@ -9,38 +9,30 @@ namespace TicTacToe.Game
 {
     public class Game
     {
-        private const Char HOST_CHAR = 'X';
-        private const Char CLIENT_CHAR = 'O';
-        /// <summary> The symbol that the player is using </summary>
-        private Char _PlayerChar;
-        /// <summary> Whether the current game is won </summary>
-        private Boolean _GameWon;
-        /// <summary> How many games the host has won </summary>
-        private Int32 _HostScore = 0;
-        /// <summary> How many games the client has won </summary>
-        private Int32 _ClientScore = 0;
-        /// <summary> The players score </summary>
-        private Int32 _PlayerScore => _IsHost ? _HostScore : _ClientScore;
-        /// <summary> The opponents score </summary>
-        private Int32 _OpponentScore => _IsHost ? _ClientScore : _HostScore;
         /// <summary> Message handler functions  </summary>
         private readonly Dictionary<Command, Action<String>> _MessageHandlers = new Dictionary<Command, Action<String>>();
-        /// <summary> Sends and receives messages as packets </summary>
-        private MessageService _MessageService;
-        /// <summary> Whether or not this player is the game host </summary>
-        private Boolean _IsHost;
-        /// <summary> Whether the game is running </summary>
-        private Boolean _Running = false;
-        /// <summary> Whether the game is initialised </summary>
-        private Boolean _Initialised = false;
-        /// <summary> Whether its the players turn </summary>
-        private Boolean _Moving;
         /// <summary> The game board data </summary>
         private Char[,] _GameBoard = { { '-','-','-' }, { '-','-','-' }, { '-','-','-' } };
+        /// <summary> Sends and receives messages as packets </summary>
+        private MessageService _MessageService;
+        /// <summary> The symbol that the player is using </summary>
+        private Char _PlayerChar;
+        /// <summary> How many games the host has won </summary>
+        private Int32 _HostScore;
+        /// <summary> How many games the client has won </summary>
+        private Int32 _ClientScore;
+        /// <summary> Whether the current game is won </summary>
+        private Boolean _GameWon;
+        /// <summary> Whether the game is running </summary>
+        private Boolean _Running;
+        /// <summary> Whether the game is initialised </summary>
+        private Boolean _Initialised;
+        /// <summary> Whether its the players turn </summary>
+        private Boolean _Moving;
         /// <summary> Whether host game is waiting for a valid move from the client </summary>
-        private Boolean _WaitingValidMoveFromClient = false;
+        private Boolean _WaitingValidMoveFromClient;
         /// <summary> Whether client game is waiting for the host to validate the clients move request </summary>
-        private Boolean _WaitingMoveConfirmationFromHost = false;
+        private Boolean _WaitingMoveConfirmationFromHost;
 
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
@@ -53,7 +45,6 @@ namespace TicTacToe.Game
             _MessageHandlers.Add(Command.GAME_WON, HandleGameWon);
             _MessageHandlers.Add(Command.EXIT, HandleExit);
 
-            DetermineHost();
             SetUpConnection();
 
             _Initialised = true;
@@ -68,8 +59,8 @@ namespace TicTacToe.Game
             }
 
             _GameWon = false;
-            _Moving = _IsHost;
-            _PlayerChar = _IsHost ? HOST_CHAR : CLIENT_CHAR;
+            _Moving = _MessageService.Master;
+            _PlayerChar = _MessageService.Master ? MASTER_CHAR : SLAVE_CHAR;
 
             _Running = true;
 
@@ -77,17 +68,17 @@ namespace TicTacToe.Game
             {
                 DrawGameBoard();
 
-                if (_IsHost)
+                if (_MessageService.Master)
                 {
                     if (_Moving)
                     {
                         Move move = GetMove();
 
-                        _GameBoard[move.X, move.Y] = HOST_CHAR;
+                        _GameBoard[move.X, move.Y] = MASTER_CHAR;
 
-                        if (IsGameWon(HOST_CHAR))
+                        if (IsGameWon(MASTER_CHAR))
                         {
-                            HandleGameWon(HOST_CHAR.ToString());
+                            HandleGameWon(MASTER_CHAR.ToString());
                         }
                         else
                         {
@@ -140,10 +131,10 @@ namespace TicTacToe.Game
                 }
 
                 _Running = !_GameWon;
-                // TODO Play again logic?
             }
 
-            if (_IsHost)
+            // Game is complete, ask for rematch
+            if (_MessageService.Master)
             {
                 String rematch = String.Empty;
 
@@ -181,47 +172,9 @@ namespace TicTacToe.Game
                 }
             }
 
+            // No rematch, game will end 
             Console.WriteLine($"Game Exiting...");
             Console.ReadKey();
-        }
-
-        /// <summary>
-        /// Asks the player if they are a host or a client and configures the network accordingly
-        /// </summary>
-        private void DetermineHost()
-        {
-            Boolean valid = false;
-
-            while (!valid)
-            {
-                Console.Clear();
-                Console.WriteLine("Welcome to TicTacToe");
-                Console.WriteLine($"----------------------");
-                Console.WriteLine($"1. Host");
-                Console.WriteLine($"2. Client");
-                Console.WriteLine($"----------------------");
-                Console.WriteLine($"Enter selection...");
-                String resp = Console.ReadLine();
-
-                if (resp == null) continue;
-
-                if (resp.ToLower() == "host" || resp.ToLower() == "1")
-                {
-                    _IsHost = true;
-                    valid = true;
-                }
-                else if (resp.ToLower() == "client" || resp.ToLower() == "2")
-                {
-                    _IsHost = false;
-                    valid = true;
-                }
-                else
-                {
-                    Console.WriteLine($"Invalid option...");
-                    Console.WriteLine($"Press enter to try again.");
-                    Console.ReadKey();
-                }
-            }
         }
 
         /// <summary>
@@ -232,40 +185,32 @@ namespace TicTacToe.Game
             if (_MessageService != null && _MessageService.Connected) return;
 
             _MessageService = new MessageService();
+            _MessageService.Initialise();
 
-            if (_IsHost)
+            if (_MessageService.Master)
             {
                 _MessageService.WaitForClient();
             }
             else
             {
-                //IPAddress ip = IPAddress.None;
-                //Int32 port = 0;
-                //Boolean addressValid = false;
+                IPAddress ip;
 
-                //while (!addressValid)
-                //{
-                //    Console.WriteLine($"Enter host ip address...");
-                //    addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
-                //}
+                if (DEBUG)
+                {
+                    ip = IPAddress.Parse(LOCAL_DEBUG_CONNECTION ? LOCAL_IP : REMOTE_IP);
+                }
+                else
+                {
+                    Boolean addressValid = false;
 
-                //Boolean portValid = false;
+                    while (!addressValid)
+                    {
+                        Console.WriteLine($"Enter host ip address...");
+                        addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
+                    }
+                }
 
-                //while (!portValid)
-                //{
-                //    Console.WriteLine($"Enter host port...");
-                //    portValid = Int32.TryParse(Console.ReadLine() ?? "", out port);
-                //}
-
-                //_MessageService.ConnectToHost(ip, port);
-
-                // TODO Remove this test code
-
-                IPAddress ip = IPAddress.Parse("192.168.0.10");
-
-                _MessageService.ConnectToHost(ip, 6600);
-
-                Console.WriteLine($"Connected to host game.");
+                _MessageService.ConnectToHost(ip, GAME_PORT);
             }
         }
 
@@ -397,18 +342,18 @@ namespace TicTacToe.Game
 
             if (IsMoveValid(move))
             {
-                _GameBoard[move.X, move.Y] = CLIENT_CHAR;
+                _GameBoard[move.X, move.Y] = SLAVE_CHAR;
 
-                if (IsGameWon(CLIENT_CHAR))
+                if (IsGameWon(SLAVE_CHAR))
                 {
-                    _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), CLIENT_CHAR.ToString()));
+                    _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), SLAVE_CHAR.ToString()));
                     Packet wonResp = _MessageService.AwaitPacket();
 
                     if (!Enum.TryParse(wonResp.Command, out Command wonRespCommand)) return;
 
                     if (wonRespCommand == Command.PACKET_RECEIVED)
                     {
-                        HandleGameWon(CLIENT_CHAR.ToString());
+                        HandleGameWon(SLAVE_CHAR.ToString());
                     }
                 }
                 else
@@ -467,9 +412,9 @@ namespace TicTacToe.Game
         {
             if (!Char.TryParse(message, out Char winner)) return;
 
-            if (_IsHost)
+            if (_MessageService.Master)
             {
-                _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), HOST_CHAR.ToString()));
+                _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), MASTER_CHAR.ToString()));
                 Packet packet = _MessageService.AwaitPacket();
                 if (Enum.TryParse(packet.Command, out Command command))
                 {
@@ -489,7 +434,7 @@ namespace TicTacToe.Game
             DrawGameBoard();
             Console.WriteLine(winner == _PlayerChar ? $"Congratulations, you won!" : $"Unlucky, you lost!");
 
-            if (message == HOST_CHAR.ToString())
+            if (message == MASTER_CHAR.ToString())
             {
                 _HostScore++;
             }
@@ -504,14 +449,18 @@ namespace TicTacToe.Game
 
         private void DrawGameBoard()
         {
+
+            Int32 playerScore =  _MessageService.Master ? _HostScore : _ClientScore;
+            Int32 opponentScore = _MessageService.Master ? _ClientScore : _HostScore;
+
             Console.Clear();
             Console.WriteLine($"_____________________________");
             Console.WriteLine($"          TicTacToe.");
             Console.WriteLine();
             Console.WriteLine($"     Your Symbol: \"{_PlayerChar}\"");
             Console.WriteLine();
-            Console.WriteLine($"        Your Score: {_PlayerScore}");
-            Console.WriteLine($"     Opponent Score: {_OpponentScore}");
+            Console.WriteLine($"        Your Score: {playerScore}");
+            Console.WriteLine($"     Opponent Score: {opponentScore}");
             Console.WriteLine($"_____________________________");
             Console.WriteLine();
             Console.WriteLine($"      {_GameBoard[0, 0]}   |   {_GameBoard[0, 1]}   |   {_GameBoard[0, 2]}   ");
