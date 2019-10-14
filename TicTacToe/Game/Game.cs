@@ -295,11 +295,21 @@ namespace TicTacToe.Game
             return new Move(x, y);
         }
 
+        /// <summary>
+        /// Checks whether a move is valid
+        /// </summary>
+        /// <param name="move"></param>
+        /// <returns></returns>
         private Boolean IsMoveValid(Move move)
         {
             return _GameBoard[move.X, move.Y] == '-';
         }
 
+        /// <summary>
+        /// Checks if the game has been won
+        /// </summary>
+        /// <param name="playerChar"></param>
+        /// <returns></returns>
         private Boolean IsGameWon(Char playerChar)
         {
             if (_GameBoard[0, 0] == playerChar && _GameBoard[0, 1] == playerChar && _GameBoard[0, 2] == playerChar) return true;
@@ -313,6 +323,10 @@ namespace TicTacToe.Game
             return false;
         }
 
+        /// <summary>
+        /// Creates a packet containing the game board information 
+        /// </summary>
+        /// <returns></returns>
         private Packet GameBoardAsPacket()
         {
             String gameBoardString = $"{_GameBoard[0, 0]}:{_GameBoard[0, 1]}:{_GameBoard[0, 2]}:" +
@@ -322,6 +336,10 @@ namespace TicTacToe.Game
             return new Packet(Command.BOARD_STATE.ToString(), gameBoardString);
         }
 
+        /// <summary>
+        /// Passes the packet to the handler that can handle it
+        /// </summary>
+        /// <param name="packet"></param>
         private void HandlePacket(Packet packet)
         {
             if (Enum.TryParse(packet.Command, true, out Command command))
@@ -330,12 +348,20 @@ namespace TicTacToe.Game
             }
         }
 
+        /// <summary>
+        /// Prints a message to the console 
+        /// </summary>
+        /// <param name="message"></param>
         private void HandleMessage(String message)
         {
             DrawGameBoard();
             Console.WriteLine($"{message}");
         }
 
+        /// <summary>
+        /// Checks a move is valid and sends a response to the client with a result
+        /// </summary>
+        /// <param name="moveString"></param>
         private void HandleMoveRequest(String moveString)
         {
             Move move = Move.FromString(moveString);
@@ -376,21 +402,33 @@ namespace TicTacToe.Game
             }
         }
 
+        /// <summary>
+        /// Sets whether we are waiting for move confirmation from the host
+        /// </summary>
+        /// <param name="message"></param>
         private void HandleMoveConfirm(String message)
         {
             _WaitingMoveConfirmationFromHost = false;
         }
 
+        /// <summary> Handles a movement deny, shouldn't occur both sides of the connection validate a given move </summary>
+        /// <param name="message"></param>
         private void HandleMoveDeny(String message)
         {
             Console.WriteLine($"Move was denied by host...");
+
+            // TODO Get another move from the client
         }
 
+        /// <summary> Handles an exit command </summary>
+        /// <param name="message"></param>
         private void HandleExit(String message)
         {
-            throw new NotImplementedException();
+            // TODO  Handle an exit request 
         }
 
+        /// <summary> Handles the game board as a packet </summary>
+        /// <param name="state"></param>
         private void HandleBoardState(String state)
         {
             String[] parts = state.Split(':');
@@ -408,6 +446,8 @@ namespace TicTacToe.Game
             _WaitingMoveConfirmationFromHost = false;
         }
 
+        /// <summary> Sends the game complete message to the client and displays the game complete message </summary>
+        /// <param name="message"></param>
         private void HandleGameWon(String message)
         {
             if (!Char.TryParse(message, out Char winner)) return;
