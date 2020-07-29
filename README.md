@@ -1,5 +1,5 @@
 # tictactoe
 TCP Networked Tic-Tac-Toe windows console application
 
-Based on tutorials for networking in C# here:
+Tutorials for networking in C#:
 https://16bpp.net/
