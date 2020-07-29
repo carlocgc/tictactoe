@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -75,9 +74,17 @@ namespace TicTacToe.Network
 
             using (WebResponse response = req.GetResponse())
             {
-                using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                try
                 {
-                    address = reader.ReadToEnd();
+                    using (StreamReader reader = new StreamReader(response.GetResponseStream() ?? throw new InvalidOperationException()))
+                    {
+                        address = reader.ReadToEnd();
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    Console.WriteLine($"Could not get public ip address: {e.Message}");
+                    return null;
                 }
             }
 
@@ -182,7 +189,7 @@ namespace TicTacToe.Network
                 catch (SocketException e)
                 {
                     Console.Clear();
-                    Console.WriteLine($"Host {hostAddress}:{port} not found...");
+                    Console.WriteLine($"Host {hostAddress}:{port} not found: {e.Message}");
                 }
                 Thread.Sleep(10);
             }

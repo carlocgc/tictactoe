@@ -24,6 +24,7 @@ namespace TicTacToe.Data
             MOVE_DENY,
             BOARD_STATE,
             GAME_WON,
+            GAME_DRAW,
             EXIT,
         }
     }
