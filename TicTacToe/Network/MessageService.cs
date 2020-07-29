@@ -108,7 +108,7 @@ namespace TicTacToe.Network
                 Console.WriteLine("Welcome to TicTacToe");
                 Console.WriteLine($"----------------------");
                 Console.WriteLine($"Local address: {_LocalAddress}:{_LocalPort}");
-                Console.WriteLine($"Public address: {_PublicAddress}:{_LocalPort}");
+                //Console.WriteLine($"Public address: {_PublicAddress}:{_LocalPort}");
                 Console.WriteLine($"----------------------");
                 Console.WriteLine($"1. Host");
                 Console.WriteLine($"2. Client");

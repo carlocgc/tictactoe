@@ -81,6 +81,10 @@ namespace TicTacToe
                         {
                             HandleGameWon(MASTER_CHAR.ToString());
                         }
+                        else if (false) // TODO Check for and handle a draw game
+                        {
+                            // Draw game handled
+                        }
                         else
                         {
                             _MessageService.SendPacket(GameBoardAsPacket());
@@ -515,7 +519,6 @@ namespace TicTacToe
 
         private void ResetGame()
         {
-            _MessageHandlers.Clear();
             _GameBoard = new Char[,] { { '-', '-', '-' }, { '-', '-', '-' }, { '-', '-', '-' } };
         }
     }
