@@ -9,10 +9,6 @@ namespace TicTacToe.Data
         public const Boolean DEBUG = true;
         /// <summary> Whether the default debug ip is the local or remote endpoint </summary>
         public const Boolean LOCAL_DEBUG_CONNECTION = true;
-        /// <summary> Local debug ip </summary>
-        public const String LOCAL_IP = "192.168.0.10";
-        /// <summary> Remote debug ip </summary>
-        public const String REMOTE_IP = "86.6.22.172";
         /// <summary> Port the game communicates on </summary>
         public const Int32 GAME_PORT = 6600;
         /// <summary> Symbol that represents the master </summary>

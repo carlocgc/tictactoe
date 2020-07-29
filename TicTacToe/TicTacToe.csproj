@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="Data\GameData.cs" />
     <Compile Include="Data\Move.cs" />
-    <Compile Include="Game\Game.cs" />
+    <Compile Include="Game.cs" />
     <Compile Include="Network\MessageService.cs" />
     <Compile Include="Data\Packet.cs" />
     <Compile Include="Program.cs" />

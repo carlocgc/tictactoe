@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Runtime.InteropServices;
 using TicTacToe.Data;
 using TicTacToe.Network;
 using static TicTacToe.Data.GameData;
 
-namespace TicTacToe.Game
+namespace TicTacToe
 {
     public class Game
     {
@@ -172,7 +173,7 @@ namespace TicTacToe.Game
                 }
             }
 
-            // No rematch, game will end 
+            // No rematch, game will end
             Console.WriteLine($"Game Exiting...");
             Console.ReadKey();
         }
@@ -193,21 +194,21 @@ namespace TicTacToe.Game
             }
             else
             {
-                IPAddress ip;
+                IPAddress ip = null;
 
-                if (DEBUG)
+                Boolean addressValid = false;
+
+                while (!addressValid)
                 {
-                    ip = IPAddress.Parse(LOCAL_DEBUG_CONNECTION ? LOCAL_IP : REMOTE_IP);
+                    Console.WriteLine($"Enter host ip address...");
+                    addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
                 }
-                else
-                {
-                    Boolean addressValid = false;
 
-                    while (!addressValid)
-                    {
-                        Console.WriteLine($"Enter host ip address...");
-                        addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
-                    }
+                if (ip == null)
+                {
+                    // TODO Handle no ip defined
+                    Console.WriteLine("IP was not defined, exiting...");
+                    Environment.Exit(0);
                 }
 
                 _MessageService.ConnectToHost(ip, GAME_PORT);
@@ -215,7 +216,7 @@ namespace TicTacToe.Game
         }
 
         /// <summary>
-        /// Prompts for a valid move on the game board 
+        /// Prompts for a valid move on the game board
         /// </summary>
         /// <returns></returns>
         private Move GetMove()
@@ -324,7 +325,7 @@ namespace TicTacToe.Game
         }
 
         /// <summary>
-        /// Creates a packet containing the game board information 
+        /// Creates a packet containing the game board information
         /// </summary>
         /// <returns></returns>
         private Packet GameBoardAsPacket()
@@ -349,7 +350,7 @@ namespace TicTacToe.Game
         }
 
         /// <summary>
-        /// Prints a message to the console 
+        /// Prints a message to the console
         /// </summary>
         /// <param name="message"></param>
         private void HandleMessage(String message)
@@ -424,7 +425,7 @@ namespace TicTacToe.Game
         /// <param name="message"></param>
         private void HandleExit(String message)
         {
-            // TODO  Handle an exit request 
+            // TODO  Handle an exit request
         }
 
         /// <summary> Handles the game board as a packet </summary>

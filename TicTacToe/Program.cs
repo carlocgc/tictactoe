@@ -1,10 +1,10 @@
 ﻿namespace TicTacToe
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
-            Game.Game game = new Game.Game();
+            Game game = new Game();
             game.Run();
         }
     }
