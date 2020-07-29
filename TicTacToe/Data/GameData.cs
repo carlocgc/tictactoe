@@ -5,10 +5,6 @@ namespace TicTacToe.Data
     /// <summary> Global static game data </summary>
     public static class GameData
     {
-        /// <summary> Whether the game is to launch in debug mode, used to streamline connection logic by not asking for ip to connect to </summary>
-        public const Boolean DEBUG = true;
-        /// <summary> Whether the default debug ip is the local or remote endpoint </summary>
-        public const Boolean LOCAL_DEBUG_CONNECTION = true;
         /// <summary> Port the game communicates on </summary>
         public const Int32 GAME_PORT = 6600;
         /// <summary> Symbol that represents the master </summary>
@@ -16,6 +12,9 @@ namespace TicTacToe.Data
         /// <summary> Symbol that represents the slave </summary>
         public const Char SLAVE_CHAR = 'O';
 
+        /// <summary>
+        /// Command type, determines how a message is to be processed
+        /// </summary>
         public enum Command
         {
             MESSAGE,

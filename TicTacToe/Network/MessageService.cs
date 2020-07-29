@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -13,6 +14,8 @@ namespace TicTacToe.Network
     {
         /// <summary> The local ip address </summary>
         private readonly IPAddress _LocalAddress;
+        /// <summary> public ip address </summary>
+        private readonly IPAddress _PublicAddress;
         /// <summary> The message port </summary>
         private readonly Int32 _LocalPort;
         /// <summary> Waits for a client and connected them </summary>
@@ -31,13 +34,14 @@ namespace TicTacToe.Network
             try
             {
                 _LocalAddress = GetLocalIpAddress();
+                _PublicAddress = GetPublicIpAddress();
             }
             catch (Exception e)
             {
                 Console.WriteLine("Network error: " + e.Message);
                 Console.WriteLine("Game exiting...");
                 Console.ReadKey();
-                Environment.Exit(1);
+                Environment.Exit(0);
             }
             _LocalPort = 6600;
             _ServerListener = new TcpListener(_LocalAddress, _LocalPort);
@@ -56,7 +60,38 @@ namespace TicTacToe.Network
                     return ipAddress;
                 }
             }
-            throw new Exception("No IPv4 device detected for this environment.");
+            throw new Exception("No local IPv4 device detected for this environment.");
+        }
+
+        /// <summary>
+        /// Gets the public ip address of the network
+        /// </summary>
+        /// <returns></returns>
+        private IPAddress GetPublicIpAddress()
+        {
+            String address;
+
+            WebRequest req = WebRequest.Create("http://checkip.dyndns.org/");
+
+            using (WebResponse response = req.GetResponse())
+            {
+                using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                {
+                    address = reader.ReadToEnd();
+                }
+            }
+
+            Int32 first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;
+            Int32 last = address.LastIndexOf("</body>", StringComparison.Ordinal);
+            address = address.Substring(first, last - first);
+
+            if (IPAddress.TryParse(address, out IPAddress addressParsed))
+            {
+                return addressParsed;
+            }
+
+            Console.WriteLine("Could not determine public address");
+            return null;
         }
 
         /// <summary>
@@ -69,12 +104,17 @@ namespace TicTacToe.Network
             while (!valid)
             {
                 Console.Clear();
+
                 Console.WriteLine("Welcome to TicTacToe");
+                Console.WriteLine($"----------------------");
+                Console.WriteLine($"Local address: {_LocalAddress}:{_LocalPort}");
+                Console.WriteLine($"Public address: {_PublicAddress}:{_LocalPort}");
                 Console.WriteLine($"----------------------");
                 Console.WriteLine($"1. Host");
                 Console.WriteLine($"2. Client");
                 Console.WriteLine($"----------------------");
                 Console.WriteLine($"Enter selection...");
+
                 String resp = Console.ReadLine();
 
                 if (resp == null) continue;

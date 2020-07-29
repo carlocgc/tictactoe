@@ -208,6 +208,7 @@ namespace TicTacToe
                 {
                     // TODO Handle no ip defined
                     Console.WriteLine("IP was not defined, exiting...");
+                    Console.ReadKey();
                     Environment.Exit(0);
                 }
 
