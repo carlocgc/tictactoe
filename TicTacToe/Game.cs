@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using TicTacToe.Data;
@@ -81,9 +82,9 @@ namespace TicTacToe
                         {
                             HandleGameWon(MASTER_CHAR.ToString());
                         }
-                        else if (false) // TODO Check for and handle a draw game
+                        else if (IsGameDrawn())
                         {
-                            // Draw game handled
+
                         }
                         else
                         {
@@ -327,6 +328,15 @@ namespace TicTacToe
             if (_GameBoard[0, 1] == playerChar && _GameBoard[1, 1] == playerChar && _GameBoard[2, 1] == playerChar) return true;
             if (_GameBoard[0, 2] == playerChar && _GameBoard[1, 2] == playerChar && _GameBoard[2, 2] == playerChar) return true;
             return false;
+        }
+
+        /// <summary>
+        /// returns whether all the spaces on the board are taken
+        /// </summary>
+        /// <returns></returns>
+        private Boolean IsGameDrawn()
+        {
+            return _GameBoard.Cast<Char>().All(c => c != '-');
         }
 
         /// <summary>
