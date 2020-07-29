@@ -84,7 +84,7 @@ namespace TicTacToe
                         }
                         else if (IsGameDrawn())
                         {
-
+                            HandleDrawnGame("");
                         }
                         else
                         {
@@ -500,6 +500,23 @@ namespace TicTacToe
             }
 
             _GameWon = true;
+            _WaitingMoveConfirmationFromHost = false;
+        }
+
+        /// <summary>
+        /// Sends the drawn game message to the other player and awaits a response
+        /// </summary>
+        /// <param name="message"></param>
+        private void HandleDrawnGame(String message)
+        {
+            _MessageService.SendPacket(new Packet(Command.GAME_DRAW.ToString()));
+
+            Packet packet = _MessageService.AwaitPacket();
+            HandlePacket(packet);
+
+            DrawGameBoard();
+            Console.WriteLine("Game is a draw!");
+
             _WaitingMoveConfirmationFromHost = false;
         }
 
