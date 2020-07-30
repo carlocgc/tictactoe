@@ -440,7 +440,9 @@ namespace TicTacToe
         /// <param name="message"></param>
         private void HandleExit(String message)
         {
-            // TODO  Handle an exit request
+            Console.WriteLine($"Rematch denied, exiting...");
+            Console.ReadKey();
+            Environment.Exit(0);
         }
 
         /// <summary> Handles the game board as a packet </summary>
