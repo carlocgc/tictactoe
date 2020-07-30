@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using TicTacToe.Models;
 using static TicTacToe.Data.StaticGameData;
 
@@ -14,14 +15,11 @@ namespace TicTacToe.Data
 
         public Char PlayerSymbol { get; set; }
 
+        public Boolean GameWon { get; set; }
+
         public GameProgressData()
         {
-            ResetGameBoard();
-        }
-
-        public void ResetGameBoard()
-        {
-            GameBoard = new[,] { { '-', '-', '-' }, { '-', '-', '-' }, { '-', '-', '-' } };
+            ResetGame();
         }
 
         public Boolean IsGameWon(char symbol)
@@ -37,6 +35,20 @@ namespace TicTacToe.Data
             return false;
         }
 
+        /// <summary>
+        /// returns whether all the spaces on the board are taken
+        /// </summary>
+        /// <returns></returns>
+        public Boolean IsGameDrawn()
+        {
+            return GameBoard.Cast<Char>().All(c => c != '-');
+        }
+
+        public Boolean IsMoveValid(MoveModel move)
+        {
+            return GameBoard[move.X, move.Y] == '-';
+        }
+
         public Packet GameBoardAsPacket()
         {
             String gameBoardString = $"{GameBoard[0, 0]}:{GameBoard[0, 1]}:{GameBoard[0, 2]}:" +
@@ -46,9 +58,12 @@ namespace TicTacToe.Data
             return new Packet(Command.BOARD_STATE.ToString(), gameBoardString);
         }
 
-        public Boolean IsMoveValid(MoveModel move)
+        public void ResetGame()
         {
-            return GameBoard[move.X, move.Y] == '-';
+            GameBoard = new[,] { { '-', '-', '-' }, { '-', '-', '-' }, { '-', '-', '-' } };
+
+            GameWon = false;
         }
     }
 }
+
