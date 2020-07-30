@@ -4,12 +4,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using TicTacToe.Data;
+using TicTacToe.Interfaces;
+using TicTacToe.Models;
 
-namespace TicTacToe.Network
+namespace TicTacToe.Services
 {
     /// <summary> Manages the connection between two players, can send and receive message packets </summary>
-    public class MessageService
+    public class MessageService : IMessageService
     {
         /// <summary> The local ip address </summary>
         private readonly IPAddress _LocalAddress;
@@ -26,7 +27,7 @@ namespace TicTacToe.Network
         /// <summary> Whether the message service is connected to the client </summary>
         public Boolean Connected { get; private set; }
 
-        public Boolean Master { get; private set; }
+        public Boolean IsHost { get; private set; }
 
         public MessageService()
         {
@@ -128,12 +129,12 @@ namespace TicTacToe.Network
 
                 if (resp.ToLower() == "host" || resp.ToLower() == "1")
                 {
-                    Master = true;
+                    IsHost = true;
                     valid = true;
                 }
                 else if (resp.ToLower() == "client" || resp.ToLower() == "2")
                 {
-                    Master = false;
+                    IsHost = false;
                     valid = true;
                 }
                 else
