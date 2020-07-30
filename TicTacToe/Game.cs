@@ -24,8 +24,6 @@ namespace TicTacToe
         private PlayerTurnData _PlayerTurnData;
         /// <summary> Draws the game screen </summary>
         private ScreenDrawer _ScreenDrawer;
-        /// <summary> Whether the current game is won </summary>
-        private Boolean _GameWon;
         /// <summary> Whether the game is running </summary>
         private Boolean _Running;
         /// <summary> Whether the game is initialised </summary>
@@ -36,22 +34,34 @@ namespace TicTacToe
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
         {
-            _MessageService = new MessageService();
             _GameProgressData = new GameProgressData();
             _PlayerTurnData = new PlayerTurnData();
+            _MessageService = new MessageService();
             _ScreenDrawer = new ScreenDrawer(_MessageService);
 
-            _MessageHandlers.Add(Command.MESSAGE, new MessageHandler(_GameProgressData, _ScreenDrawer));
-            _MessageHandlers.Add(Command.MOVE_REQUEST, HandleMoveRequest);
-            _MessageHandlers.Add(Command.MOVE_CONFIRM, HandleMoveConfirm);
-            _MessageHandlers.Add(Command.MOVE_DENY, HandleMoveDeny);
-            _MessageHandlers.Add(Command.BOARD_STATE, HandleBoardState);
-            _MessageHandlers.Add(Command.GAME_WON, HandleGameWon);
-            _MessageHandlers.Add(Command.EXIT, HandleExit);
+            _MessageHandlers.Add(Command.GAME_DRAW, new MessageHandler(_GameProgressData, _ScreenDrawer));
+            _MessageHandlers.Add(Command.MOVE_CONFIRM, new MoveConfirmHandler(_PlayerTurnData));
+            _MessageHandlers.Add(Command.MOVE_DENY, new MoveDenyHandler());
+            _MessageHandlers.Add(Command.BOARD_STATE, new BoardStateHandler(_GameProgressData, _PlayerTurnData));
+            _MessageHandlers.Add(Command.GAME_WON, new GameWonHandler(_MessageService, _ScreenDrawer, _GameProgressData, _PlayerTurnData));
+            _MessageHandlers.Add(Command.MOVE_REQUEST, new MoveRequestHandler(_MessageService, _GameProgressData, _PlayerTurnData, _MessageHandlers[Command.GAME_WON]));
+            _MessageHandlers.Add(Command.EXIT, new ExitHandler());
 
             SetUpConnection();
 
             _Initialised = true;
+        }
+
+        /// <summary>
+        /// Passes the packet to the handler that can handle it
+        /// </summary>
+        /// <param name="packet"></param>
+        private void HandlePacket(Packet packet)
+        {
+            if (Enum.TryParse(packet.Command, true, out Command command))
+            {
+                _MessageHandlers[command].HandleMessage(packet.Message);
+            }
         }
 
         /// <summary> Main game loop </summary>
@@ -62,7 +72,6 @@ namespace TicTacToe
                 Initialise();
             }
 
-            _GameWon = false;
             _Moving = _MessageService.IsHost;
             _GameProgressData.PlayerSymbol = _MessageService.IsHost ? MASTER_CHAR : SLAVE_CHAR;
 
@@ -82,11 +91,11 @@ namespace TicTacToe
 
                         if (_GameProgressData.IsGameWon(MASTER_CHAR))
                         {
-                            HandleGameWon(MASTER_CHAR.ToString());
+                            _MessageHandlers[Command.GAME_WON].HandleMessage(MASTER_CHAR.ToString());
                         }
-                        else if (IsGameDrawn())
+                        else if (_GameProgressData.IsGameDrawn())
                         {
-                            HandleDrawnGame("");
+                            _MessageHandlers[Command.GAME_DRAW].HandleMessage("");
                         }
                         else
                         {
@@ -138,7 +147,7 @@ namespace TicTacToe
                     }
                 }
 
-                _Running = !_GameWon;
+                _Running = !_GameProgressData.GameWon;
             }
 
             // Game is complete, ask for rematch
@@ -159,7 +168,7 @@ namespace TicTacToe
 
                     if (resp.Message == "rematch")
                     {
-                        _GameProgressData.ResetGameBoard();
+                        _GameProgressData.ResetGame();
                         Run();
                     }
                 }
@@ -171,7 +180,7 @@ namespace TicTacToe
                 if (packet.Message == "y")
                 {
                     _MessageService.SendPacket(new Packet(Command.MESSAGE.ToString(), "rematch"));
-                    _GameProgressData.ResetGameBoard();
+                    _GameProgressData.ResetGame();
                     Run();
                 }
                 else
@@ -190,9 +199,8 @@ namespace TicTacToe
         /// </summary>
         private void SetUpConnection()
         {
-            if (_MessageService != null && _MessageService.Connected) return;
+            if (_MessageService.Connected) return;
 
-            _MessageService = new MessageService();
             _MessageService.Initialise();
 
             if (_MessageService.IsHost)
@@ -302,133 +310,6 @@ namespace TicTacToe
                 valid = true;
             }
             return new MoveModel(x, y);
-        }
-
-
-        /// <summary>
-        /// returns whether all the spaces on the board are taken
-        /// </summary>
-        /// <returns></returns>
-        private Boolean IsGameDrawn()
-        {
-            return _GameProgressData.GameBoard.Cast<Char>().All(c => c != '-');
-        }
-
-
-        /// <summary>
-        /// Passes the packet to the handler that can handle it
-        /// </summary>
-        /// <param name="packet"></param>
-        private void HandlePacket(Packet packet)
-        {
-            if (Enum.TryParse(packet.Command, true, out Command command))
-            {
-                _MessageHandlers[command].HandleMessage(packet.Message);
-            }
-        }
-
-        /// <summary>
-        /// Sets whether we are waiting for move confirmation from the host
-        /// </summary>
-        /// <param name="message"></param>
-        private void HandleMoveConfirm(String message)
-        {
-            _PlayerTurnData.WaitingForHost = false;
-        }
-
-        /// <summary> Handles a movement deny, shouldn't occur both sides of the connection validate a given move </summary>
-        /// <param name="message"></param>
-        private void HandleMoveDeny(String message)
-        {
-            Console.WriteLine($"Move was denied by host...");
-
-            // TODO Get another move from the client
-        }
-
-        /// <summary> Handles an exit command </summary>
-        /// <param name="message"></param>
-        private void HandleExit(String message)
-        {
-            Console.WriteLine($"Rematch denied, exiting...");
-            Console.ReadKey();
-            Environment.Exit(0);
-        }
-
-        /// <summary> Handles the game board as a packet </summary>
-        /// <param name="state"></param>
-        private void HandleBoardState(String state)
-        {
-            String[] parts = state.Split(':');
-            Int32 count = 0;
-
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    _GameProgressData.GameBoard[x, y] = Char.Parse(parts[count]);
-                    count++;
-                }
-            }
-
-            _WaitingMoveConfirmationFromHost = false;
-        }
-
-        /// <summary> Sends the game complete message to the client and displays the game complete message </summary>
-        /// <param name="message"></param>
-        private void HandleGameWon(String message)
-        {
-            if (!Char.TryParse(message, out Char winner)) return;
-
-            if (_MessageService.IsHost)
-            {
-                _MessageService.SendPacket(new Packet(Command.GAME_WON.ToString(), MASTER_CHAR.ToString()));
-                Packet packet = _MessageService.AwaitPacket();
-                if (Enum.TryParse(packet.Command, out Command command))
-                {
-                    if (command == Command.PACKET_RECEIVED)
-                    {
-                        _MessageService.SendPacket(_GameProgressData.GameBoardAsPacket());
-                    }
-                }
-            }
-            else
-            {
-                _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
-                Packet packet = _MessageService.AwaitPacket();
-                HandlePacket(packet);
-            }
-
-            _ScreenDrawer.Draw(_GameProgressData);
-            Console.WriteLine(winner == _GameProgressData.PlayerSymbol ? $"Congratulations, you won!" : $"Unlucky, you lost!");
-
-            if (message == MASTER_CHAR.ToString())
-            {
-                _GameProgressData.HostScore++;
-            }
-            else
-            {
-                _GameProgressData.ClientScore++;
-            }
-
-            _GameWon = true;
-            _WaitingMoveConfirmationFromHost = false;
-        }
-
-        /// <summary>
-        /// Sends the drawn game message to the other player and awaits a response
-        /// </summary>
-        /// <param name="message"></param>
-        private void HandleDrawnGame(String message)
-        {
-            _MessageService.SendPacket(new Packet(Command.GAME_DRAW.ToString()));
-
-            Packet packet = _MessageService.AwaitPacket();
-            HandlePacket(packet);
-
-            _ScreenDrawer.Draw(_GameProgressData);
-            Console.WriteLine("Game is a draw!");
-
-            _WaitingMoveConfirmationFromHost = false;
         }
     }
 }
