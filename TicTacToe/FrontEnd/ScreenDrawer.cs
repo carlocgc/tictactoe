@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TicTacToe.Data;
 using TicTacToe.Interfaces;
-using TicTacToe.Models;
 
 namespace TicTacToe.FrontEnd
 {
@@ -20,8 +15,6 @@ namespace TicTacToe.FrontEnd
 
         public void Draw(GameProgressData model)
         {
-            Int32 playerScore =  _MessageService.IsHost ? model.HostScore : model.ClientScore;
-            Int32 opponentScore = _MessageService.IsHost ? model.ClientScore : model.HostScore;
 
             Console.Clear();
             Console.WriteLine($"_____________________________");
@@ -29,8 +22,8 @@ namespace TicTacToe.FrontEnd
             Console.WriteLine();
             Console.WriteLine($"     Your Symbol: \"{model.PlayerSymbol}\"");
             Console.WriteLine();
-            Console.WriteLine($"        Your Score: {playerScore}");
-            Console.WriteLine($"     Opponent Score: {opponentScore}");
+            Console.WriteLine($"        Host Score: {model.HostScore}");
+            Console.WriteLine($"     Client Score: {model.ClientScore}");
             Console.WriteLine($"_____________________________");
             Console.WriteLine();
             Console.WriteLine($"      {model.GameBoard[0, 0]}   |   {model.GameBoard[0, 1]}   |   {model.GameBoard[0, 2]}   ");
