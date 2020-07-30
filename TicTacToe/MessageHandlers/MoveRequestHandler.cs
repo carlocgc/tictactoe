@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TicTacToe.Data;
 using TicTacToe.Interfaces;
 using TicTacToe.Models;
@@ -13,11 +9,11 @@ namespace TicTacToe.MessageHandlers
     {
         private readonly GameProgressData _GameProgressData;
 
-        private readonly IMessageService _MessageService;
-
         private readonly PlayerTurnData _PlayerTurnData;
 
         private readonly IMessageHandler _GameWonHandler;
+
+        private readonly IMessageService _MessageService;
 
         public MoveRequestHandler(IMessageService messageService, GameProgressData gameProgressData, PlayerTurnData playerTurnData, IMessageHandler gameWonHandler)
         {

@@ -11,6 +11,8 @@ namespace TicTacToe.MessageHandlers
     {
         #region Implementation of IMessageHandler
 
+        public IMessageService _MessageService { get; set; }
+
         public void HandleMessage(String message)
         {
 

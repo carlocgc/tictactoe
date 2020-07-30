@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TicTacToe.Interfaces;
 
 namespace TicTacToe.MessageHandlers
@@ -11,9 +7,13 @@ namespace TicTacToe.MessageHandlers
     {
         #region Implementation of IMessageHandler
 
+        public IMessageService _MessageService { get; set; }
+
         public void HandleMessage(String message)
         {
+            Console.WriteLine($"Move was denied by host...");
 
+            // TODO Get another move from the client
         }
 
         #endregion
