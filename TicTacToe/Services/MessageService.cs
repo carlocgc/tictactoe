@@ -24,6 +24,7 @@ namespace TicTacToe.Services
         private TcpClient _Client;
         /// <summary> The clients message stream </summary>
         private NetworkStream _MsgStream;
+
         /// <summary> Whether the message service is connected to the client </summary>
         public Boolean Connected { get; private set; }
 
@@ -127,21 +128,29 @@ namespace TicTacToe.Services
 
                 if (resp == null) continue;
 
-                if (resp.ToLower() == "host" || resp.ToLower() == "1")
+                switch (resp.ToLower())
                 {
-                    IsHost = true;
-                    valid = true;
-                }
-                else if (resp.ToLower() == "client" || resp.ToLower() == "2")
-                {
-                    IsHost = false;
-                    valid = true;
-                }
-                else
-                {
-                    Console.WriteLine($"Invalid option...");
-                    Console.WriteLine($"Press enter to try again.");
-                    Console.ReadKey();
+                    case "host":
+                    case "1":
+                        {
+                            IsHost = true;
+                            valid = true;
+                            break;
+                        }
+                    case "client":
+                    case "2":
+                        {
+                            IsHost = false;
+                            valid = true;
+                            break;
+                        }
+                    default:
+                        {
+                            Console.WriteLine($"Invalid option...");
+                            Console.WriteLine($"Press enter to try again.");
+                            Console.ReadKey();
+                            break;
+                        }
                 }
             }
         }
