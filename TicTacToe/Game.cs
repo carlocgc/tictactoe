@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using TicTacToe.Data;
 using TicTacToe.FrontEnd;
@@ -31,6 +30,8 @@ namespace TicTacToe
         /// <summary> Whether its the players turn </summary>
         private Boolean _Moving;
 
+        private UserInterface _UserInterface;
+
         /// <summary> Sets up the message handlers, called once at game start </summary>
         private void Initialise()
         {
@@ -38,6 +39,7 @@ namespace TicTacToe
             _PlayerTurnData = new PlayerTurnData();
             _MessageService = new MessageService();
             _ScreenDrawer = new ScreenDrawer(_MessageService);
+            _UserInterface = new UserInterface(_GameProgressData);
 
             _MessageHandlers.Add(Command.GAME_DRAW, new MessageHandler(_GameProgressData, _ScreenDrawer));
             _MessageHandlers.Add(Command.MOVE_CONFIRM, new MoveConfirmHandler(_PlayerTurnData));
@@ -47,7 +49,18 @@ namespace TicTacToe
             _MessageHandlers.Add(Command.MOVE_REQUEST, new MoveRequestHandler(_MessageService, _GameProgressData, _PlayerTurnData, _MessageHandlers[Command.GAME_WON]));
             _MessageHandlers.Add(Command.EXIT, new ExitHandler());
 
-            SetUpConnection();
+            _MessageService.Initialise();
+
+            if (_MessageService.IsHost)
+            {
+                _MessageService.WaitForClient();
+            }
+            else
+            {
+                IPAddress hostAddress = _UserInterface.GetHostIpAddress();
+
+                _MessageService.ConnectToHost(hostAddress, GAME_PORT);
+            }
 
             _Initialised = true;
         }
@@ -73,6 +86,7 @@ namespace TicTacToe
             }
 
             _Moving = _MessageService.IsHost;
+
             _GameProgressData.PlayerSymbol = _MessageService.IsHost ? MASTER_CHAR : SLAVE_CHAR;
 
             _Running = true;
@@ -85,7 +99,7 @@ namespace TicTacToe
                 {
                     if (_Moving)
                     {
-                        MoveModel move = GetMove();
+                        MoveModel move = _UserInterface.GetMove();
 
                         _GameProgressData.GameBoard[move.X, move.Y] = MASTER_CHAR;
 
@@ -127,13 +141,18 @@ namespace TicTacToe
                         while (_PlayerTurnData.WaitingForHost)
                         {
                             _ScreenDrawer.Draw(_GameProgressData);
-                            MoveModel move = GetMove();
+
+                            MoveModel move = _UserInterface.GetMove();
+
                             _MessageService.SendPacket(new Packet(Command.MOVE_REQUEST.ToString(), move.ToString()));
+
                             Packet resp = _MessageService.AwaitPacket();
+
                             HandlePacket(resp);
                         }
 
                         _MessageService.SendPacket(new Packet(Command.PACKET_RECEIVED.ToString()));
+
                         _Moving = false;
                     }
                     else
@@ -141,6 +160,7 @@ namespace TicTacToe
                         Console.WriteLine($"Opponent is thinking...");
 
                         Packet packet = _MessageService.AwaitPacket();
+
                         HandlePacket(packet);
 
                         _Moving = true;
@@ -158,6 +178,7 @@ namespace TicTacToe
                 while (rematch.ToLower() != "y" && rematch.ToLower() != "n")
                 {
                     Console.WriteLine($"Rematch?... y/n");
+
                     rematch = Console.ReadLine() ?? "";
                 }
 
@@ -192,124 +213,6 @@ namespace TicTacToe
             // No rematch, game will end
             Console.WriteLine($"Game Exiting...");
             Console.ReadKey();
-        }
-
-        /// <summary>
-        /// Configures the network connection between two players
-        /// </summary>
-        private void SetUpConnection()
-        {
-            if (_MessageService.Connected) return;
-
-            _MessageService.Initialise();
-
-            if (_MessageService.IsHost)
-            {
-                _MessageService.WaitForClient();
-            }
-            else
-            {
-                IPAddress ip = null;
-
-                Boolean addressValid = false;
-
-                while (!addressValid)
-                {
-                    Console.WriteLine($"Enter host ip address...");
-                    addressValid = IPAddress.TryParse(Console.ReadLine() ?? "", out ip);
-                }
-
-                if (ip == null)
-                {
-                    // TODO Handle no ip defined
-                    Console.WriteLine("IP was not defined, exiting...");
-                    Console.ReadKey();
-                    Environment.Exit(0);
-                }
-
-                _MessageService.ConnectToHost(ip, GAME_PORT);
-            }
-        }
-
-        /// <summary>
-        /// Prompts for a valid move on the game board
-        /// </summary>
-        /// <returns></returns>
-        private MoveModel GetMove()
-        {
-            Boolean valid = false;
-
-            Int32 x = 0;
-            Int32 y = 0;
-
-            String lastError = String.Empty;
-
-            while (!valid)
-            {
-                Console.WriteLine();
-                Console.WriteLine($"Enter a valid move in format \"X,X\" (0-2)");
-                if (lastError != String.Empty)
-                {
-                    Console.WriteLine($"{lastError}");
-                }
-
-                String input = Console.ReadLine() ?? "";
-
-                if (input.Length > 3)
-                {
-                    Console.WriteLine($"Too many characters, try again...");
-                    continue;
-                }
-
-                if (input.Length < 3)
-                {
-                    Console.WriteLine($"Too few characters, try again...");
-                    continue;
-                }
-
-                if (!input.Contains(","))
-                {
-                    Console.WriteLine($"Missing comma, try again...");
-                    continue;
-                }
-
-                String[] parts = input.Split(',');
-
-                if (!Int32.TryParse(parts[0], out Int32 tempX))
-                {
-                    Console.WriteLine($"{tempX} is not a number, try again...");
-                    continue;
-                }
-
-                if (tempX < 0 || tempX > 2)
-                {
-                    Console.WriteLine($"{tempX} is out of bounds, must be between 0-2, try again...");
-                    continue;
-                }
-
-                if (!Int32.TryParse(parts[1], out Int32 tempY))
-                {
-                    Console.WriteLine($"{tempY} is not a number, try again...");
-                    continue;
-                }
-
-                if (tempY < 0 || tempY > 2)
-                {
-                    Console.WriteLine($"{tempY} is out of bounds, must be between 0-2, try again...");
-                    continue;
-                }
-
-                if (!_GameProgressData.IsMoveValid(new MoveModel(tempX, tempY)))
-                {
-                    Console.WriteLine($"({tempX}, {tempY}) is already taken by \"{_GameProgressData.GameBoard[tempX, tempY]}\", try again...");
-                    continue;
-                }
-
-                x = tempX;
-                y = tempY;
-                valid = true;
-            }
-            return new MoveModel(x, y);
         }
     }
 }

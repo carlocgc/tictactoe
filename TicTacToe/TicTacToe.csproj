@@ -49,6 +49,8 @@
     <Compile Include="Data\PlayerTurnData.cs" />
     <Compile Include="Data\StaticGameData.cs" />
     <Compile Include="Data\GameProgressData.cs" />
+    <Compile Include="FrontEnd\UserInterface.cs" />
+    <Compile Include="Interfaces\IUserInterface.cs" />
     <Compile Include="Models\MoveModel.cs" />
     <Compile Include="FrontEnd\ScreenDrawer.cs" />
     <Compile Include="Game.cs" />
